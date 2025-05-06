@@ -1,3 +1,7 @@
+'''
+Author: DengYH
+Date: 2025-05-06 20:04:09
+'''
 from ebooklib import epub
 from bs4 import BeautifulSoup
 import ebooklib
