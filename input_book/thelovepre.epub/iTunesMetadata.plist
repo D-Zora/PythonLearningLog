@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>BKAllocatedSize</key>
+	<integer>1642496</integer>
+	<key>BKDisplayName</key>
+	<string>The Love Prescription Seven Days to More Intimacy, Connection, and Joy (John Gottman, PhD Julie Schwartz Gottman, PhD)</string>
+	<key>BKGenerationCount</key>
+	<integer>3</integer>
+	<key>BKInsertionDate</key>
+	<integer>731565412</integer>
+	<key>artistName</key>
+	<string>John Gottman, PhD</string>
+	<key>book-info</key>
+	<dict>
+		<key>cover-image-hash</key>
+		<string>56AD675B441B6DA884C012174D7366DB</string>
+		<key>cover-image-path</key>
+		<string>OEBPS/images/9780525508137_cover.jpg</string>
+		<key>mime-type</key>
+		<string>application/epub+zip</string>
+		<key>package-file-hash</key>
+		<string>47DC9B6A25B50938E2774A85FB077A8E</string>
+		<key>publisher-unique-id</key>
+		<string>9780525508137</string>
+		<key>unique-id</key>
+		<integer>-6647322191471936248</integer>
+		<key>update-level</key>
+		<integer>2</integer>
+	</dict>
+	<key>bookDescription</key>
+	<string>&lt;b&gt;INSTANT &lt;i&gt;NEW YORK TIMES&lt;/i&gt; BESTSELLER&lt;br&gt;&amp;ldquo;This book feels so hopeful because it&amp;rsquo;s direct, it&amp;rsquo;s really honest, and it&amp;rsquo;s so actionable.&amp;rdquo;&amp;#160;&amp;mdash;Brene Brown&lt;br&gt;From &lt;i&gt;New York Times&lt;/i&gt;&amp;ndash;bestselling authors Dr. John Gottman and Dr. Julie Schwartz Gottman, a simple yet powerful plan to transform your relationship in seven days&lt;/b&gt;&lt;br&gt;What makes love last? Why does one couple stay together forever, while another falls apart? And most importantly, is there a scientific formula for love?&lt;br&gt;&amp;#160;&lt;br&gt;Drs. John Gottman and Julie Schwartz Gottman&amp;#160;are the world&amp;rsquo;s leading relationship scientists. For the past forty years, they have been studying love.&amp;#160;They&amp;rsquo;ve gathered data on over three thousand couples, looking at everything from their body language to the way they converse to their stress hormone levels. Their goal: to identify the building blocks of love.&lt;br&gt; &amp;#160;&amp;#160;&lt;br&gt; &lt;i&gt;The Love Prescription&lt;/i&gt; distills their...</string>
+	<key>isPreview</key>
+	<false/>
+	<key>itemName</key>
+	<string>The Love Prescription</string>
+	<key>updateDate</key>
+	<date>2024-03-08T04:36:52Z</date>
+</dict>
+</plist>

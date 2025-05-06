@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>BKAllocatedSize</key>
+	<integer>1241088</integer>
+	<key>BKDisplayName</key>
+	<string>Unlimited_Memory:_How_to_Use_Advanced_Learning_Strategies_to_Learn_Faster,_Remember_More_and_be_More_Productive</string>
+	<key>BKGenerationCount</key>
+	<integer>2</integer>
+	<key>BKInsertionDate</key>
+	<integer>731563292</integer>
+	<key>artistName</key>
+	<string>Kevin Horsley</string>
+	<key>book-info</key>
+	<dict>
+		<key>cover-image-hash</key>
+		<string>2263377F0781D2315FABC90D7B782A12</string>
+		<key>cover-image-path</key>
+		<string>cover.jpeg</string>
+		<key>mime-type</key>
+		<string>application/epub+zip</string>
+		<key>package-file-hash</key>
+		<string>ADCC6506BE0A51C052E2622AF6492C8C</string>
+		<key>publisher-unique-id</key>
+		<string>dd6b22ff-aa59-491b-b449-8f1d8f0e5c61</string>
+		<key>unique-id</key>
+		<integer>-753238924665577128</integer>
+		<key>update-level</key>
+		<integer>2</integer>
+	</dict>
+	<key>isPreview</key>
+	<false/>
+	<key>itemName</key>
+	<string>Unlimited Memory: How to Use Advanced Learning Strategies to Learn Faster, Remember More and be More Productive (Mental Mastery Book 1)</string>
+	<key>updateDate</key>
+	<date>2024-03-08T04:01:32Z</date>
+</dict>
+</plist>

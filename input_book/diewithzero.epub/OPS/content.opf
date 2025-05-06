@@ -1,0 +1,99 @@
+<package xmlns="http://www.idpf.org/2007/opf" unique-identifier="PrimaryID" version="3.0" xml:lang="en">
+    <metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">
+    <dc:title>Die with Zero</dc:title>
+    <dc:identifier id="PrimaryID">9a60f230-a41b-0138-fb8c-787b8ab883ee</dc:identifier>
+    <dc:language>en</dc:language>
+    <dc:publisher>HMH Books</dc:publisher>
+    <dc:creator>Bill Perkins</dc:creator>
+    <dc:identifier id="ISBN">urn:isbn:9780358100515</dc:identifier>
+    <dc:source id="src-id">urn:isbn:9780358099765</dc:source>
+    <dc:date>2020-07-28</dc:date>
+    <dc:source>https://hmhbooks.com/</dc:source>
+    <dc:rights>Please read the legal notice included in this e-book and/or check the copyright status in your country.</dc:rights>
+    <meta property="dcterms:modified">2020-07-09T14:08:36Z</meta>
+    <meta content="cover-image" name="cover"/>
+    <meta property="schema:accessMode">textual</meta>
+    <meta property="schema:accessMode">visual</meta>
+    <meta property="schema:accessModeSufficient">textual, visual</meta>
+    <meta property="schema:accessibilityFeature">structuralNavigation</meta>
+    <meta property="schema:accessibilitySummary">The publication may be missing some alternative text and ARIA labels. The publication otherwise meets WCAG 2.0 Level A.</meta>
+    <description xmlns="http://purl.org/dc/elements/1.1/">&lt;p&gt;&lt;B&gt;A Common-Sense Guide to Living Rich....Instead of Dying Rich&lt;/B&gt;&lt;BR /&gt; Imagine if by the time you died, you did everything you were told to. You worked hard, saved your money, and looked forward to financial freedom when you retired.&lt;BR /&gt; &lt;BR /&gt; The only thing you wasted along the way was...&lt;I&gt;your life.&lt;/I&gt;&lt;BR /&gt; &lt;BR /&gt;&lt;I&gt;Die with Zero&lt;/I&gt; presents a startling new and provocative philosophy as well as practical guide on how to get the most out of your money&amp;#8212;&lt;I&gt;and&lt;/I&gt; out of your life&lt;B&gt;.&lt;/B&gt; It's intended for those who place lifelong memorable experiences far ahead of simply making and accumulating money for one's so-called Golden Years.&lt;BR /&gt; &lt;BR /&gt; In short, Bill Perkins wants to rescue you from over-saving and under-living. Regardless of your age, &lt;I&gt;Die with Zero&lt;/I&gt; will teach you Perkins' plan for optimizing your life, stage by stage, so you're fully engaged and enjoying what you've worked and saved for.&lt;BR /&gt; &lt;BR /&gt; You'll discover how to maximize your...</description>
+</metadata>
+    <manifest>
+<item href="images/cover.jpg" id="cover-image" media-type="image/jpeg"/>
+<item href="images/titlepage.jpg" id="title-image" media-type="image/jpeg"/>
+<item href="images/Twitter.gif" id="Twitter" media-type="image/gif"/>
+<item href="images/Facebook.gif" id="Facebook" media-type="image/gif"/>
+<item href="images/Tumblr.gif" id="Tumblr" media-type="image/gif"/>
+<item href="images/Pinterest.gif" id="Pinterest" media-type="image/gif"/>
+<item href="images/Instagram.gif" id="Instagram" media-type="image/gif"/>
+<item href="images/YouTube.gif" id="YouTube" media-type="image/gif"/>
+<item href="images/DiewithZero_040_1.jpg" id="fig_DiewithZero_040_1" media-type="image/jpeg"/>
+<item href="images/DiewithZero_045_1.jpg" id="fig_DiewithZero_045_1" media-type="image/jpeg"/>
+<item href="images/DiewithZero-7.jpg" id="fig_DiewithZero-7" media-type="image/jpeg"/>
+<item href="images/DiewithZero_095_1.jpg" id="fig_DiewithZero_095_1" media-type="image/jpeg"/>
+<item href="images/DiewithZero_130_1.jpg" id="fig_DiewithZero_130_1" media-type="image/jpeg"/>
+<item href="images/DiewithZero_134_1.jpg" id="fig_DiewithZero_134_1" media-type="image/jpeg"/>
+<item href="images/DiewithZero_158_1.jpg" id="fig_DiewithZero_158_1" media-type="image/jpeg"/>
+<item href="images/DiewithZero_160_1.jpg" id="fig_DiewithZero_160_1" media-type="image/jpeg"/>
+<item href="images/DiewithZero_177_1.jpg" id="fig_DiewithZero_177_1" media-type="image/jpeg"/>
+<item href="images/DiewithZero_180_1.jpg" id="fig_DiewithZero_180_1" media-type="image/jpeg"/>
+<item href="images/DiewithZero_186_1.jpg" id="fig_DiewithZero_186_1" media-type="image/jpeg"/>
+<item href="images/authorphoto.jpg" id="fig_authorphoto" media-type="image/jpeg"/>
+<item href="images/logo.jpg" id="logo" media-type="image/jpeg"/>
+<item href="titlepage.xhtml" id="titlepage" media-type="application/xhtml+xml"/>
+<item href="contents.xhtml" id="contents" media-type="application/xhtml+xml"/>
+<item href="toc.xhtml" id="tocn" media-type="application/xhtml+xml" properties="nav"/>
+<item href="front01.xhtml" id="front01" media-type="application/xhtml+xml"/>
+<item href="front02.xhtml" id="front02" media-type="application/xhtml+xml"/>
+<item href="front03.xhtml" id="front03" media-type="application/xhtml+xml"/>
+<item href="c01.xhtml" id="c01" media-type="application/xhtml+xml"/>
+<item href="c02.xhtml" id="c02" media-type="application/xhtml+xml"/>
+<item href="c03.xhtml" id="c03" media-type="application/xhtml+xml"/>
+<item href="c04.xhtml" id="c04" media-type="application/xhtml+xml"/>
+<item href="c05.xhtml" id="c05" media-type="application/xhtml+xml"/>
+<item href="c06.xhtml" id="c06" media-type="application/xhtml+xml"/>
+<item href="c07.xhtml" id="c07" media-type="application/xhtml+xml"/>
+<item href="c08.xhtml" id="c08" media-type="application/xhtml+xml"/>
+<item href="c09.xhtml" id="c09" media-type="application/xhtml+xml"/>
+<item href="back01.xhtml" id="back01" media-type="application/xhtml+xml"/>
+<item href="back02.xhtml" id="back02" media-type="application/xhtml+xml"/>
+<item href="back03.xhtml" id="back03" media-type="application/xhtml+xml"/>
+<item href="back04.xhtml" id="back04" media-type="application/xhtml+xml"/>
+<item href="back05.xhtml" id="back05" media-type="application/xhtml+xml"/>
+<item href="back06.xhtml" id="back06" media-type="application/xhtml+xml"/>
+<item href="back07.xhtml" id="back07" media-type="application/xhtml+xml"/>
+<item href="back08.xhtml" id="back08" media-type="application/xhtml+xml"/>
+<item href="css/hmh.css" id="css" media-type="text/css"/>
+<item href="toc.ncx" id="ncx" media-type="application/x-dtbncx+xml"/>
+</manifest>
+    <spine toc="ncx">
+<itemref idref="titlepage" linear="yes"/>
+<itemref idref="contents" linear="yes"/>
+<itemref idref="front01" linear="yes"/>
+<itemref idref="front02" linear="yes"/>
+<itemref idref="front03" linear="yes"/>
+<itemref idref="c01" linear="yes"/>
+<itemref idref="c02" linear="yes"/>
+<itemref idref="c03" linear="yes"/>
+<itemref idref="c04" linear="yes"/>
+<itemref idref="c05" linear="yes"/>
+<itemref idref="c06" linear="yes"/>
+<itemref idref="c07" linear="yes"/>
+<itemref idref="c08" linear="yes"/>
+<itemref idref="c09" linear="yes"/>
+<itemref idref="back01" linear="yes"/>
+<itemref idref="back02" linear="yes"/>
+<itemref idref="back03" linear="yes"/>
+<itemref idref="back04" linear="yes"/>
+<itemref idref="back05" linear="yes"/>
+<itemref idref="back06" linear="yes"/>
+<itemref idref="back07" linear="yes"/>
+<itemref idref="back08" linear="yes"/>
+</spine>
+    <guide>
+    <reference href="titlepage.xhtml" title="Title Page" type="title-page"/>
+    <reference href="contents.xhtml" title="Contents" type="toc"/>
+    <reference href="titlepage.xhtml" title="Title Page" type="text"/>
+    </guide>
+    </package>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>artistName</key>
+	<string>John Gottman, PhD</string>
+	<key>book-info</key>
+	<dict>
+		<key>cover-image-hash</key>
+		<string>56AD675B441B6DA884C012174D7366DB</string>
+		<key>cover-image-path</key>
+		<string>OEBPS/images/9780525508137_cover.jpg</string>
+		<key>mime-type</key>
+		<string>application/epub+zip</string>
+		<key>package-file-hash</key>
+		<string>47DC9B6A25B50938E2774A85FB077A8E</string>
+		<key>publisher-unique-id</key>
+		<string>9780525508137</string>
+		<key>unique-id</key>
+		<integer>-6647322191471936248</integer>
+		<key>update-level</key>
+		<integer>2</integer>
+	</dict>
+	<key>itemName</key>
+	<string>The Love Prescription</string>
+	<key>playlistName</key>
+	<string>The Love Prescription</string>
+	<key>releaseDate</key>
+	<string>2022-09-27</string>
+</dict>
+</plist>

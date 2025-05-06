@@ -1,0 +1,99 @@
+/* prh_resets.css */
+
+/* version 1.0.1 */
+
+/* =================== DO NOT EDIT =====================*/
+
+body {
+	font-size: 1em;
+	line-height: 1.3; /* can be 1.4 for instructional titles */
+	font-family: serif;
+	widows: 2; /* does not inherit */
+	orphans: 2; /* does not inherit */
+}
+div {
+	margin: 0;
+	padding: 0;
+	widows: 2;
+	orphans: 2;
+}
+h1, h2, h3, h4, h5, h6 {
+	font-weight: normal;
+	font-style: normal;
+	page-break-after: avoid;
+	-webkit-hyphens: auto;
+	-ms-hyphens: auto;
+	widows: 2;
+	orphans: 2;
+}
+p {
+	text-indent: 0;
+	/* text-align to be set based on the print book */
+	margin: 0;
+	padding: 0;
+	widows: 2;
+	orphans: 2;
+}
+ol, ul {
+	margin: 0;
+	padding: 0 0 0 1.75em; /* DEFAULT padding-left for all lists due to Amazon's automatic margin-left application */
+}
+li {
+	margin: 0;
+	padding: 0;
+}
+table {
+	width: 100%;
+	border-collapse: collapse;
+}
+th, td{
+	font-style: normal;
+	font-weight: normal;
+	padding: 4px; /* DEFAULT padding added, none present by default on reading systems */
+}
+img {
+	max-height: 100%;
+	max-width: 100%;
+	margin: 0;
+	padding: 0;
+	object-fit: contain;
+}
+figure {
+	display: block; /* include this explicit CSS property for older reading systems like Nook */
+	margin: 0;
+	padding: 0;
+	page-break-inside: avoid;
+}
+figcaption {
+	display: block; /* include this explicit CSS property for older reading systems like Nook */
+	margin: 0;
+	padding: 0;
+}
+blockquote {
+	display: block; /* include this explicit CSS property for older reading systems like Nook */
+	margin: 0;
+	padding: 0;
+}
+aside {
+	display: block; /* include this explicit CSS property for older reading systems like Nook */
+	margin: 1em 0;
+	padding: 1em;
+	border: .66em solid #757575;
+}
+span {
+	text-indent: 0;
+}
+i {
+	font-style: italic;
+}
+b {
+	font-weight: bold;
+}
+sup, sub {
+	font-size: 0.7em;
+	line-height: 0;
+}
+a {
+	color: #4c7aa9;
+	text-decoration: underline;
+}

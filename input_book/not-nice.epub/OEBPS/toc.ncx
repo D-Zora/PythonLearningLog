@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1">
+   <head>
+      <meta name="dtb:uid" content="bookid"/>
+      <meta name="dtb:depth" content="0"/>
+      <meta name="dtb:totalPageCount" content="0"/>
+      <meta name="dtb:maxPageNumber" content="0"/>
+   </head>
+   <docTitle>
+      <text>UnKnown</text>
+   </docTitle>
+   <navMap>
+     <navPoint id="id1" playOrder="1">
+       <navLabel>
+         <text>INTRODUCTION:</text>
+       </navLabel>
+       <content src="text00005.html#_idParaDest-1"/>
+     </navPoint>
+     <navPoint id="id2" playOrder="2">
+       <navLabel>
+         <text>CHAPTER 1:</text>
+       </navLabel>
+       <content src="text00007.html#_idParaDest-2"/>
+     </navPoint>
+     <navPoint id="id3" playOrder="3">
+       <navLabel>
+         <text>CHAPTER 2:</text>
+       </navLabel>
+       <content src="text00016.html#_idParaDest-3"/>
+     </navPoint>
+     <navPoint id="id4" playOrder="4">
+       <navLabel>
+         <text>CHAPTER 3:</text>
+       </navLabel>
+       <content src="text00022.html#_idParaDest-4"/>
+     </navPoint>
+     <navPoint id="id5" playOrder="5">
+       <navLabel>
+         <text>CHAPTER 4:</text>
+       </navLabel>
+       <content src="text00031.html#_idParaDest-5"/>
+     </navPoint>
+     <navPoint id="id6" playOrder="6">
+       <navLabel>
+         <text>CHAPTER 5:</text>
+       </navLabel>
+       <content src="text00035.html#_idParaDest-6"/>
+     </navPoint>
+     <navPoint id="id7" playOrder="7">
+       <navLabel>
+         <text>CHAPTER 6:</text>
+       </navLabel>
+       <content src="text00045.html#_idParaDest-7"/>
+     </navPoint>
+     <navPoint id="id8" playOrder="8">
+       <navLabel>
+         <text>CHAPTER 7:</text>
+       </navLabel>
+       <content src="text00053.html#_idParaDest-8"/>
+     </navPoint>
+     <navPoint id="id9" playOrder="9">
+       <navLabel>
+         <text>CHAPTER 8:</text>
+       </navLabel>
+       <content src="text00069.html#_idParaDest-9"/>
+     </navPoint>
+     <navPoint id="id10" playOrder="10">
+       <navLabel>
+         <text>CHAPTER 9:</text>
+       </navLabel>
+       <content src="text00079.html#_idParaDest-10"/>
+     </navPoint>
+     <navPoint id="id11" playOrder="11">
+       <navLabel>
+         <text>CHAPTER 10:</text>
+       </navLabel>
+       <content src="text00107.html#_idParaDest-11"/>
+     </navPoint>
+     <navPoint id="id12" playOrder="12">
+       <navLabel>
+         <text>CHAPTER 11:</text>
+       </navLabel>
+       <content src="text00125.html#_idParaDest-12"/>
+     </navPoint>
+     <navPoint id="id13" playOrder="13">
+       <navLabel>
+         <text>CHAPTER 12:</text>
+       </navLabel>
+       <content src="text00135.html#_idParaDest-13"/>
+     </navPoint>
+     <navPoint id="id14" playOrder="14">
+       <navLabel>
+         <text>CHAPTER 13:</text>
+       </navLabel>
+       <content src="text00143.html#_idParaDest-14"/>
+     </navPoint>
+     <navPoint id="id15" playOrder="15">
+       <navLabel>
+         <text>CHAPTER 14:</text>
+       </navLabel>
+       <content src="text00152.html#_idParaDest-15"/>
+     </navPoint>
+     <navPoint id="id16" playOrder="16">
+       <navLabel>
+         <text>CHAPTER 15:</text>
+       </navLabel>
+       <content src="text00161.html#_idParaDest-16"/>
+     </navPoint>
+     <navPoint id="id17" playOrder="17">
+       <navLabel>
+         <text>EPILOGUE:</text>
+       </navLabel>
+       <content src="text00163.html#_idParaDest-17"/>
+     </navPoint>
+   </navMap>
+</ncx>

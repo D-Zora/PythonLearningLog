@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>artistName</key>
+	<string>Brian Nox</string>
+	<key>book-info</key>
+	<dict>
+		<key>cover-image-hash</key>
+		<string>F4C0B091C3BEEDC743727FEFB9EB3669</string>
+		<key>cover-image-path</key>
+		<string>cover.jpeg</string>
+		<key>mime-type</key>
+		<string>application/epub+zip</string>
+		<key>package-file-hash</key>
+		<string>BA7CB4C3064A1E8C804C18FEC3BC81A1</string>
+		<key>publisher-unique-id</key>
+		<string>c344a970-f85e-498e-bbe2-ad1896400b53</string>
+		<key>unique-id</key>
+		<integer>-5095784611325929671</integer>
+		<key>update-level</key>
+		<integer>2</integer>
+	</dict>
+	<key>itemName</key>
+	<string>F*CK Him!: Nice Girls Always Finish Single</string>
+	<key>playlistName</key>
+	<string>F*CK Him!: Nice Girls Always Finish Single</string>
+	<key>releaseDate</key>
+	<string>2016-09-30T07:00:00+00:00</string>
+	<key>sort-artist</key>
+	<string>Nox, Brian</string>
+	<key>sort-artist-status</key>
+	<integer>3</integer>
+</dict>
+</plist>

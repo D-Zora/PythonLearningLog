@@ -1,0 +1,107 @@
+<package xmlns="http://www.idpf.org/2007/opf" prefix="ibooks: http://vocabulary.itunes.apple.com/rdf/ibooks/vocabulary-extensions-1.0/ a11y: http://www.idpf.org/epub/vocab/package/a11y/# schema: http://schema.org/" unique-identifier="bookid" version="3.0" xml:lang="en">
+<metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">
+<dc:title id="en_title" xml:lang="en">How to Be Your Own Therapist</dc:title>
+<meta property="title-type" refines="#en_title">main</meta>
+<dc:creator id="creator01">Owen O'Kane</dc:creator>
+<meta id="role1" property="role" refines="#creator01" scheme="marc:relators">aut</meta>
+<meta property="file-as" refines="#creator01">O’Kane, Owen</meta>
+<dc:source id="isbn">urn:isbn:9780008550639</dc:source>
+<meta property="source-of" refines="#isbn">pagination</meta>
+<dc:contributor>Owen O’Kane</dc:contributor>
+<dc:identifier id="bookid">9780008378288</dc:identifier>
+<dc:language>en</dc:language>
+<dc:date>2022</dc:date>
+<dc:format>269 pages</dc:format>
+<dc:type>Text</dc:type>
+<dc:rights>Copyright © Owen O’Kane 2022</dc:rights>
+<dc:publisher>HarperCollins Publishers</dc:publisher>
+<meta content="cover-image" name="cover"/>
+<meta property="dcterms:modified">2022-04-30T08:13:49Z</meta>
+<!-- Schema references -->
+<meta property="schema:accessMode">textual</meta>
+<meta property="schema:accessMode">visual</meta>
+<meta property="schema:accessModeSufficient">textual,visual</meta>
+<meta property="schema:accessModeSufficient">textual</meta>
+<meta property="schema:accessibilityFeature">alternativeText</meta>
+<meta property="schema:accessibilityFeature">structuralNavigation</meta>
+<meta property="schema:accessibilityFeature">readingOrder</meta>
+<meta property="schema:accessibilityFeature">tableOfContents</meta>
+<meta property="schema:accessibilityFeature">printPageNumbers</meta>
+<meta property="schema:accessibilityHazard">none</meta>
+<meta property="schema:accessibilitySummary">This publication includes mark-up to enable accessibility and compatibility with assistive technology. Short image descriptions are provided for all images but long image descriptions are not included. This ebook passes Daisy’s Ace WCAG 2.0 Level AA checks.</meta>
+<meta property="a11y:certifiedBy">None provided</meta>
+<link href="http://www.idpf.org/epub/a11y/accessibility-20170105.html#wcag-aa" rel="dcterms:conformsTo"/>
+<description xmlns="http://purl.org/dc/elements/1.1/">Smart, short techniques throughout the day can form a healthier perspective 'Truly empowering – a book for everyone. It will help you figure out life.'Fearne Cotton All the benefits of therapy – 10 minutes at a time Let Owen O'Kane, psychotherapist, former NHS Clinical Lead and Sunday Times bestselling author of TEN TO ZEN, show you how anyone can use simple, understandable techniques to unlock better mental health. Modern life is a minefield for stress. Whether it's juggling work, relationships or money, we often struggle to make time for ourselves and can find ourselves stuck in a rut with bad habits or worries. In HOW TO BE YOUR OWN THERAPIST, Owen O'Kane reveals how smart, short techniques throughout the day can form healthier perspectives and let you ditch harmful thought patterns. Using the latest evidence-based tools and techniques from across a range of therapies including CBT, mindfulness and interpersonal therapy, Owen provides empowering solutions to managing what keeps...</description>
+</metadata>
+<manifest>
+<item href="text/9780008378288_Cover.xhtml" id="Cover" media-type="application/xhtml+xml"/>
+<item href="text/About_the_Author.xhtml" id="About_the_Author" media-type="application/xhtml+xml"/>
+<item href="text/9780008378288_Also_by.xhtml" id="Also_by" media-type="application/xhtml+xml"/>
+<item href="text/9780008378288_Title.xhtml" id="Title" media-type="application/xhtml+xml"/>
+<item href="text/9780008378288_Copyright.xhtml" id="Copyright" media-type="application/xhtml+xml"/>
+<item href="text/9780008378288_Note_to_Readers.xhtml" id="Note_to_Readers" media-type="application/xhtml+xml"/>
+<item href="text/9780008378288_Dedication.xhtml" id="Dedication" media-type="application/xhtml+xml"/>
+<item href="text/9780008378288_Contents.xhtml" id="Contents" media-type="application/xhtml+xml"/>
+<item href="text/9780008378288_Introduction.xhtml" id="Introduction" media-type="application/xhtml+xml"/>
+<item href="text/9780008378288_Part01.xhtml" id="Part01" media-type="application/xhtml+xml"/>
+<item href="text/9780008378288_Chapter01.xhtml" id="Chapter01" media-type="application/xhtml+xml"/>
+<item href="text/9780008378288_Chapter02.xhtml" id="Chapter02" media-type="application/xhtml+xml"/>
+<item href="text/9780008378288_Chapter03.xhtml" id="Chapter03" media-type="application/xhtml+xml"/>
+<item href="text/9780008378288_Chapter04.xhtml" id="Chapter04" media-type="application/xhtml+xml"/>
+<item href="text/9780008378288_Chapter05.xhtml" id="Chapter05" media-type="application/xhtml+xml"/>
+<item href="text/9780008378288_Part02.xhtml" id="Part02" media-type="application/xhtml+xml"/>
+<item href="text/9780008378288_Chapter06.xhtml" id="Chapter06" media-type="application/xhtml+xml"/>
+<item href="text/9780008378288_Chapter07.xhtml" id="Chapter07" media-type="application/xhtml+xml"/>
+<item href="text/9780008378288_Chapter08.xhtml" id="Chapter08" media-type="application/xhtml+xml"/>
+<item href="text/9780008378288_Chapter09.xhtml" id="Chapter09" media-type="application/xhtml+xml"/>
+<item href="text/9780008378288_Chapter10.xhtml" id="Chapter10" media-type="application/xhtml+xml"/>
+<item href="text/9780008378288_Information.xhtml" id="Information" media-type="application/xhtml+xml"/>
+<item href="text/9780008378288_Acknowledgements.xhtml" id="Acknowledgements" media-type="application/xhtml+xml"/>
+<item href="text/9780008378288_Backmatter.xhtml" id="Backmatter" media-type="application/xhtml+xml"/>
+<item href="text/About_the_Publisher.xhtml" id="About_the_Publisher" media-type="application/xhtml+xml"/>
+
+<item href="text/nav.xhtml" id="nav" media-type="application/xhtml+xml" properties="nav"/>
+<item href="9780008378288_toc.ncx" id="ncx" media-type="application/x-dtbncx+xml"/>
+<item href="styles/9780008378288_template.css" id="stylesheet" media-type="text/css"/>
+
+<item href="images/9780008378288_Cover.jpg" id="cover-image" media-type="image/jpeg" properties="cover-image"/>
+<item href="images/f0043-01.jpg" id="img_f0043-01" media-type="image/jpeg"/>
+<item href="images/f0260-01.jpg" id="img_f0260-01" media-type="image/jpeg"/>
+<item href="images/logo.jpg" id="img_logo" media-type="image/jpeg"/>
+<item href="images/title.jpg" id="img_title" media-type="image/jpeg"/>
+
+</manifest>
+<spine toc="ncx">
+<itemref idref="Cover"/>
+<itemref idref="About_the_Author"/>
+<itemref idref="Also_by"/>
+<itemref idref="Title"/>
+<itemref idref="Copyright"/>
+<itemref idref="Note_to_Readers"/>
+<itemref idref="Dedication"/>
+<itemref idref="Contents"/>
+<itemref idref="Introduction"/>
+<itemref idref="Part01"/>
+<itemref idref="Chapter01"/>
+<itemref idref="Chapter02"/>
+<itemref idref="Chapter03"/>
+<itemref idref="Chapter04"/>
+<itemref idref="Chapter05"/>
+<itemref idref="Part02"/>
+<itemref idref="Chapter06"/>
+<itemref idref="Chapter07"/>
+<itemref idref="Chapter08"/>
+<itemref idref="Chapter09"/>
+<itemref idref="Chapter10"/>
+<itemref idref="Information"/>
+<itemref idref="Acknowledgements"/>
+<itemref idref="Backmatter"/>
+<itemref idref="About_the_Publisher"/>
+</spine>
+<guide>
+<reference href="text/9780008378288_Cover.xhtml" title="Cover Image" type="cover"/>
+<reference href="text/9780008378288_Copyright.xhtml" title="Copyright" type="copyright-page"/>
+<reference href="text/9780008378288_Contents.xhtml" title="Table of Contents" type="toc"/>
+<reference href="text/9780008378288_Title.xhtml" title="Start" type="text"/>
+</guide>
+</package>
