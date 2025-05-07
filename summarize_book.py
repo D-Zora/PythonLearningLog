@@ -5,8 +5,6 @@ from sumy.parsers.plaintext import PlaintextParser
 from sumy.nlp.tokenizers import Tokenizer
 from sumy.summarizers.text_rank import TextRankSummarizer
 
-nltk.download('punkt')
-
 def read_book(txt_path):
     with open(txt_path, 'r', encoding='utf-8') as f:
         text = f.read()
@@ -22,7 +20,6 @@ def extract_key_sentences(text, count=7):
     summary = summarizer(parser.document, count)
     return [str(sentence) for sentence in summary]
 
-
 # 从段落中提取与关键句相关的内容（用于生成详细内容）
 def find_supporting_paragraphs(key_sentences, paragraphs, per_key=3):
     result = []
@@ -33,69 +30,89 @@ def find_supporting_paragraphs(key_sentences, paragraphs, per_key=3):
                 supports.append(para.strip())
                 if len(supports) >= per_key:
                     break
-        # 如果匹配不够，用其他段落补足
         if len(supports) < per_key:
             supports += [p for p in paragraphs if p not in supports][:per_key - len(supports)]
-        result.append({"title": key,
-                       "short_title": ' '.join(key.strip().split()[:6]) + "...",
-                       "content": supports})
+
+        if len(key) > 80:
+            short_title = key.strip().split(".")[0]
+        else:
+            short_title = key
+
+        result.append({
+            "title": key,
+            "short_title": short_title.strip().rstrip('.') + '.',
+            "content": supports
+        })
     return result
 
+def generate_introduction(text, max_sentences=15, max_chars=1000):
+    parser = PlaintextParser.from_string(text, Tokenizer("english"))
+    summarizer = TextRankSummarizer()
+    summary = summarizer(parser.document, max_sentences)
 
-# 自动生成简介 Introduction（取前几段 + 总体总结）
-def generate_introduction(paragraphs, count=3):
-    intro = "\n\n".join(paragraphs[:count])
-    return intro
+    selected = []
+    total_chars = 0
+    for sentence in summary:
+        sentence_str = str(sentence)
+        if total_chars + len(sentence_str) > max_chars:
+            break
+        selected.append(sentence_str)
+        total_chars += len(sentence_str)
+
+    return " ".join(selected)
 
 
-# 生成 Markdown 布局（左右结构）
 def generate_markdown(book_summary, output_path):
     title = book_summary["title"]
     key_ideas = book_summary["key_ideas"]
     introduction = book_summary["introduction"]
 
     md_lines = []
-    md_lines.append("<div style='display: flex;'>")
 
-    # === 右边导航栏 ===
-    md_lines.append("<div style='width: 25%; padding-right: 20px; border-right: 1px solid #ccc;'>")
-    md_lines.append(f"<h2>🔹 Key Ideas in <i>{title}</i></h2>")
-    md_lines.append("<ul>")
+    md_lines.append(f"# Key Ideas from *{title}*")
+    md_lines.append("")
+    md_lines.append("---")
+    md_lines.append("")
+
+    md_lines.append("## Introduction")
+    md_lines.append("")
+    md_lines.append(f"{introduction}")
+    md_lines.append("")
+    md_lines.append("---")
+    md_lines.append("")
+
+    md_lines.append("## Table of Contents")
+    md_lines.append("")
     for i, idea in enumerate(key_ideas, start=1):
-        md_lines.append(f"<li><a href='#key-idea-{i}'>{idea['short_title']}</a></li>")
-    md_lines.append("</ul>")
-    md_lines.append("</div>")
-
-    # === 左边正文内容 ===
-    md_lines.append("<div style='width: 75%; padding-left: 20px;'>")
-    md_lines.append(f"<h1>📘 Key Ideas from <i>{title}</i></h1>")
-    md_lines.append("<hr>")
-    md_lines.append("<h2>📖 Introduction</h2>")
-    md_lines.append(f"<p>{introduction}</p>")
-    md_lines.append("<hr>")
+        anchor = f"key-idea-{i}"
+        short_title = idea['short_title']
+        md_lines.append(f"- [Key Idea {i}: {short_title}](#{anchor})")
+    md_lines.append("")
+    md_lines.append("---")
+    md_lines.append("")
 
     for i, idea in enumerate(key_ideas, start=1):
-        md_lines.append(f"<h2 id='key-idea-{i}'>🔸 Key Idea {i}: {idea['title']}</h2>")
+        anchor = f"key-idea-{i}"
+        md_lines.append(f"## Key Idea {i}: {idea['title']}")
+        md_lines.append(f"<a name='{anchor}'></a>")
+        md_lines.append("")
         for para in idea["content"]:
-            md_lines.append(f"<p>{para}</p>")
-        md_lines.append("<hr>")
-
-    md_lines.append("</div>")  # end of left content
-    md_lines.append("</div>")  # end of container
+            md_lines.append(f"{para}")
+            md_lines.append("")
+        md_lines.append("---")
+        md_lines.append("")
 
     with open(output_path, "w", encoding="utf-8") as f:
         f.write("\n".join(md_lines))
 
-    print(f"✅ Markdown saved to: {output_path}")
+    print(f"文件已保存至: {output_path}")
 
-
-# 单书摘要生成逻辑
 def summarize_book(txt_path, output_path):
     text = read_book(txt_path)
     paragraphs = split_paragraphs(text)
     key_sentences = extract_key_sentences(text, count=6)
-    key_ideas = find_supporting_paragraphs(key_sentences, paragraphs)
-    intro = generate_introduction(paragraphs, count=3)
+    key_ideas = find_supporting_paragraphs(key_sentences, paragraphs, per_key=3)
+    intro = generate_introduction(text, max_sentences=20, max_chars=1000)
 
     book_summary = {
         "title": os.path.basename(txt_path).replace(".txt", ""),
@@ -105,8 +122,6 @@ def summarize_book(txt_path, output_path):
 
     generate_markdown(book_summary, output_path)
 
-
-# 批量处理
 def batch_summarize(input_folder, output_folder):
     os.makedirs(output_folder, exist_ok=True)
     for file in os.listdir(input_folder):
@@ -114,7 +129,7 @@ def batch_summarize(input_folder, output_folder):
             in_path = os.path.join(input_folder, file)
             out_path = os.path.join(output_folder, file.replace('.txt', '_summary.md'))
             summarize_book(in_path, out_path)
-            print(f'✅ 处理完成：{file}')
+            print(f'处理完成：{file}')
 
 
 if __name__ == '__main__':

@@ -25,6 +25,7 @@ pip install -r require.txt
 ### 3. 下载 NLTK 数据
 ```
 python -m nltk.downloader punkt
+python nltk_downloader.py
 ```
 
 ## 使用
@@ -52,3 +53,7 @@ book-summary-generator/
 └── output_book/          # 存放输入的书籍文本文件
 └── book_summaries/       # 存放输出的 Markdown 摘要文件
 ```
+
+## 实现效果图
+![diewithzero](./diewithzero.png)
+![diewithzero2](./diewithzero2.png)

@@ -30,7 +30,7 @@ def convert_epub(input_folder,output_folder):
          print(f'正在处理： {file_name}...')
 
          text = extract_epub(epub_path)
-
+         
          output_file_name = file_name.replace('.epub','.txt')
          output_path = os.path.join(output_folder,output_file_name)
 
