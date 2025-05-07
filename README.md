@@ -2,17 +2,9 @@
  * @Author: DengYH
  * @Date: 2025-05-06 19:58:38
 -->
-# Book Summary Generator
+# Book Summary
 
-本项目是一个自动生成书籍摘要和 Markdown 格式总结的工具。它通过提取书籍中的关键句子和段落来生成一个简洁的书籍概述，并使用 Markdown 格式生成书籍的摘要页面。该工具适用于批量处理多个书籍文件，自动提取关键内容，并以清晰的格式呈现。
-
-## 功能
-
-1. **提取书籍中的关键句子**：使用 TextRank 算法提取书籍中的关键句子。
-2. **生成简洁的书籍摘要**：从提取的关键句子中找到支持内容，生成书籍的关键点。
-3. **自动生成简介**：提取书籍前几段作为简介，并自动总结书籍内容。
-4. **生成 Markdown 文件**：将书籍的简介和关键句相关内容生成具有左右结构的 Markdown 页面。
-5. **批量处理**：支持批量处理多个文本文件，自动为每个文件生成摘要。
+本项目使用 Python 作为开发语言，对9本外文书籍，进行处理，提取出书籍中的精华内容并总结出5~7个关键点，每个关键点至少要有3段内容，不少于1000字。
 
 ## 安装
 
@@ -22,12 +14,12 @@
 
 ```
 git clone https://github.com/yourusername/book-summary-generator.git
-cd book-summary-generator
+cd BookSummary
 ```
 
 ### 2. 安装依赖
 ```
-pip install -r requirements.txt
+pip install -r require.txt
 ```
 
 ### 3. 下载 NLTK 数据

@@ -118,6 +118,6 @@ def batch_summarize(input_folder, output_folder):
 
 
 if __name__ == '__main__':
-    input_folder = 'output_book'       # 输入文本文件夹
-    output_folder = 'book_summaries'   # 输出 Markdown 文件夹
+    input_folder = 'output_book'
+    output_folder = 'book_summaries'
     batch_summarize(input_folder, output_folder)
