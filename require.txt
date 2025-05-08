@@ -1,6 +1,0 @@
-ebooklib
-beautifulsoup4
-lxml
-nltk
-spacy==3.7.2
-sumy

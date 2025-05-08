@@ -1,41 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-	<key>BKAllocatedSize</key>
-	<integer>2351104</integer>
-	<key>BKDisplayName</key>
-	<string>Not Nice Stop People Pleasing, Staying Silent,  Feeling Guilty... And Start Speaking Up, Saying No, Asking Boldly, And... (Aziz Gazipura) (Z-Library)</string>
-	<key>BKGenerationCount</key>
-	<integer>2</integer>
-	<key>BKInsertionDate</key>
-	<integer>726840552</integer>
-	<key>artistName</key>
-	<string>Gazipura, Aziz</string>
-	<key>book-info</key>
-	<dict>
-		<key>cover-image-hash</key>
-		<string>3ED1442FFFD57A8493CF2092852BC7F5</string>
-		<key>cover-image-path</key>
-		<string>OEBPS/Image00006.jpg</string>
-		<key>mime-type</key>
-		<string>application/epub+zip</string>
-		<key>package-file-hash</key>
-		<string>5703CF75E0066BFFE0CFDB61980BFC79</string>
-		<key>publisher-unique-id</key>
-		<string>urn:uuid:273fd756-62f2-4858-8d67-99e08f24bba9</string>
-		<key>unique-id</key>
-		<integer>-4972255650375584712</integer>
-		<key>update-level</key>
-		<integer>2</integer>
-	</dict>
-	<key>bookDescription</key>
-	<string>Stop People Pleasing, Staying Silent, &amp; Feeling Guilty…  And Start Speaking Up, Saying No, Asking Boldly, And  Unapologetically Being Yourself</string>
-	<key>isPreview</key>
-	<false/>
-	<key>itemName</key>
-	<string>Not Nice: Stop People Pleasing, Staying Silent, &amp; Feeling Guilty... And Start Speaking Up, Saying No, Asking Boldly, And Unapologetically Being Yourself</string>
-	<key>updateDate</key>
-	<date>2024-01-13T12:09:12Z</date>
-</dict>
-</plist>
