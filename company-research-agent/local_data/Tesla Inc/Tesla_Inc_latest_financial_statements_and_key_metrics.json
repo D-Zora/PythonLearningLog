@@ -1,0 +1,42 @@
+{
+  "https://www.nasdaq.com/market-activity/stocks/tsla/financials": {
+    "title": "Tesla, Inc. (TSLA) Financials | Nasdaq",
+    "content": "Find the latest Tesla, Inc. Common Stock (TSLA) annual income statements, balance sheets, financial statements, ratios, and cash flow data at Nasdaq.com.",
+    "query": "Tesla Inc latest financial statements and key metrics",
+    "url": "https://www.nasdaq.com/market-activity/stocks/tsla/financials",
+    "source": "web_search",
+    "score": 0.71040785
+  },
+  "https://www.macrotrends.net/stocks/charts/TSLA/tesla/financial-statements": {
+    "title": "Tesla Financial Statements 2009-2025 | TSLA - Macrotrends",
+    "content": "Ten years of annual and quarterly financial statements and annual report data for Tesla (TSLA). Income statements, balance sheets, cash flow statements and key ratios.",
+    "query": "Tesla Inc latest financial statements and key metrics",
+    "url": "https://www.macrotrends.net/stocks/charts/TSLA/tesla/financial-statements",
+    "source": "web_search",
+    "score": 0.68798697
+  },
+  "https://www.wsj.com/market-data/quotes/TSLA/financials": {
+    "title": "TSLA | Tesla Inc. Financial Statements - WSJ",
+    "content": "Tesla Inc. balance sheet, income statement, cash flow, earnings & estimates, ratio and margins. View TSLA financial statements in full.",
+    "query": "Tesla Inc latest financial statements and key metrics",
+    "url": "https://www.wsj.com/market-data/quotes/TSLA/financials",
+    "source": "web_search",
+    "score": 0.64128816
+  },
+  "https://stockanalysis.com/stocks/tsla/financials/ratios/": {
+    "title": "Tesla (TSLA) Financial Ratios - Stock Analysis",
+    "content": "Financial ratios and valuation metrics for Tesla (TSLA). Includes annual, quarterly and trailing numbers with history and charts.",
+    "query": "Tesla Inc latest financial statements and key metrics",
+    "url": "https://stockanalysis.com/stocks/tsla/financials/ratios/",
+    "source": "web_search",
+    "score": 0.60133666
+  },
+  "https://ir.tesla.com/": {
+    "title": "Tesla Investor Relations",
+    "content": "Tesla's mission is to accelerate the world's transition to sustainable energy. Today, Tesla builds not only all-electric vehicles but also infinitely scalable clean energy generation and storage products. ... Investor Relations Investor Relations Q1 2025 Financial Results and Company Update Webcast Q1 2025 Financial Results and Company Update",
+    "query": "Tesla Inc latest financial statements and key metrics",
+    "url": "https://ir.tesla.com/",
+    "source": "web_search",
+    "score": 0.39705023
+  }
+}
