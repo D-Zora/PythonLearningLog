@@ -16,30 +16,27 @@ class TextReferenceLinker:
     PATTERNS = {
         # 财务数据
         'financial_metrics': [
-            r'(?:revenue|sales|income|profit|earnings|growth|increase|decrease|loss)\s*(?:of|at|was|is)?\s*\$?\d+(?:\.\d+)?(?:B|M|K)?(?:\s*(?:billion|million|thousand))?\s*(?:USD|dollars)?(?:\s*(?:in|for|during))?\s*(?:Q[1-4]|quarter|year|month|week)?(?:\s*\d{4})?',
-            r'\d+(?:\.\d+)?%\s*(?:increase|decrease|growth|decline|up|down)(?:\s*(?:in|of|for))?\s*(?:revenue|sales|income|profit|earnings|market share|market value)',
-            r'\$?\d+(?:\.\d+)?(?:B|M|K)?(?:\s*(?:billion|million|thousand))?\s*(?:USD|dollars)?(?:\s*(?:in|of|for))?\s*(?:revenue|sales|income|profit|earnings|growth|increase|decrease|loss)',
-        ],
-        # 市场份额数据
-        'market_share': [
-            r'\d+(?:\.\d+)?%\s*(?:of|in)?\s*(?:market share|market)(?:\s*(?:in|for|during))?\s*(?:Q[1-4]|quarter|year|month|week)?(?:\s*\d{4})?',
-            r'(?:market share|market value|market size)\s*(?:of|is|was|at)?\s*\$?\d+(?:\.\d+)?(?:B|M|K)?(?:\s*(?:billion|million|thousand))?\s*(?:USD|dollars)?',
+            r'\$?\d+(?:\.\d+)?(?:B|M|K)?(?:\s*(?:billion|million|thousand))?\s*(?:USD|dollars)?',  # 匹配任何金额
+            r'\d+(?:\.\d+)?%\s*(?:increase|decrease|growth|decline|up|down)',  # 匹配任何百分比变化
+            r'\d+(?:\.\d+)?%\s*(?:of|in)?\s*(?:market share|market)',  # 匹配市场份额百分比
         ],
         # 销售数据
         'sales_data': [
-            r'(?:sold|delivered|produced)\s*\d+(?:\.\d+)?(?:B|M|K)?(?:\s*(?:billion|million|thousand))?\s*(?:units|vehicles|cars)?(?:\s*(?:in|for|during))?\s*(?:Q[1-4]|quarter|year|month|week)?(?:\s*\d{4})?',
-            r'\d+(?:\.\d+)?(?:B|M|K)?(?:\s*(?:billion|million|thousand))?\s*(?:units|vehicles|cars)?(?:\s*(?:sold|delivered|produced))(?:\s*(?:in|for|during))?\s*(?:Q[1-4]|quarter|year|month|week)?(?:\s*\d{4})?',
-        ],
-        # 业务战略数据
-        'business_strategy': [
-            r'(?:launched|announced|introduced|released)\s+(?:new|the|a)?\s*(?:product|service|feature|strategy|initiative|partnership|acquisition)',
-            r'(?:expanding|entering|launching)\s+(?:into|in|new)?\s*(?:market|region|country|segment)',
-            r'(?:investing|invested|investment)\s+(?:in|into|of)?\s*\$?\d+(?:\.\d+)?(?:B|M|K)?(?:\s*(?:billion|million|thousand))?\s*(?:USD|dollars)?',
+            r'\d+(?:\.\d+)?(?:B|M|K)?(?:\s*(?:billion|million|thousand))?\s*(?:units|vehicles|cars)',  # 匹配销售数量
+            r'\d+(?:\.\d+)?(?:B|M|K)?(?:\s*(?:billion|million|thousand))?\s*(?:sold|delivered|produced)',  # 匹配生产/销售数量
         ],
         # 技术数据
         'technical_metrics': [
-            r'(?:efficiency|performance|capacity|range|speed|power|output)\s*(?:of|at|is|was)?\s*\d+(?:\.\d+)?(?:\s*(?:kWh|kW|mph|km/h|miles|kilometers|percent|%))?',
-            r'\d+(?:\.\d+)?(?:\s*(?:kWh|kW|mph|km/h|miles|kilometers|percent|%))?\s*(?:efficiency|performance|capacity|range|speed|power|output)',
+            r'\d+(?:\.\d+)?(?:\s*(?:kWh|kW|mph|km/h|miles|kilometers|percent|%))',  # 匹配技术指标
+        ],
+        # 时间数据
+        'time_data': [
+            r'\d{4}',  # 匹配年份
+            r'Q[1-4]\s*\d{4}',  # 匹配季度
+        ],
+        # 通用数值
+        'general_numbers': [
+            r'\d+(?:\.\d+)?',  # 匹配任何数字
         ]
     }
     
@@ -51,6 +48,16 @@ class TextReferenceLinker:
         self.url_to_title = {}  # 存储URL到标题的映射
         self.data_dir = data_dir  # 本地数据目录
         self.content_cache = {}  # 缓存已加载的内容
+        self.url_to_ref = {}  # URL -> reference number
+        self.ref_to_url = {}  # reference number -> URL
+        self.ref_to_title = {}  # reference number -> title
+        
+        # 记录正则表达式模式
+        logger.info("Initialized TextReferenceLinker with patterns:")
+        for category, patterns in self.PATTERNS.items():
+            logger.info(f"Category '{category}' has {len(patterns)} patterns:")
+            for i, pattern in enumerate(patterns, 1):
+                logger.debug(f"  Pattern {i}: {pattern}")
     
     def _get_or_create_ref_number(self, url: str) -> int:
         """获取或创建URL的引用编号"""
@@ -71,87 +78,149 @@ class TextReferenceLinker:
             if title:
                 self.url_to_title[url] = title
             # 确保URL有引用编号
-            self._get_or_create_ref_number(url)
+            ref_num = self._get_or_create_ref_number(url)
+            logger.info(f"Added data source: data='{data[:50]}...', url='{url}', title='{title}', score={score}, ref_num={ref_num}")
+            logger.debug(f"Current data_to_urls size: {len(self.data_to_urls)}, url_to_number size: {len(self.url_to_number)}")
     
     def _sort_urls_by_score(self, urls_with_info: List[Tuple[str, str, float]]) -> List[Tuple[str, str]]:
         """根据分数对URL进行排序，返回URL和标题的元组列表"""
         sorted_items = sorted(urls_with_info, key=lambda x: x[2], reverse=True)
         return [(url, title) for url, title, _ in sorted_items]
     
-    def _create_reference_mark(self, url: str, title: str = "") -> str:
-        """创建引用标记，使用更紧凑的格式"""
-        ref_num = self._get_or_create_ref_number(url)
-        if not title:
-            title = self.url_to_title.get(url, urlparse(url).netloc)
-        # 使用更紧凑的格式：[n]
-        return f'[{ref_num}]'
+    def _create_reference_mark(self, url: str, title: str) -> str:
+        """创建引用标记，使用纯 Markdown 脚注格式"""
+        if url not in self.url_to_ref:
+            self.url_to_ref[url] = len(self.url_to_ref) + 1
+            self.ref_to_url[self.url_to_ref[url]] = url
+            self.ref_to_title[self.url_to_ref[url]] = title
+            logger.info(f"Created reference mark: url='{url}', title='{title}', mark='[^{self.url_to_ref[url]}]'")
+        # 使用纯 Markdown 脚注格式
+        ref_num = self.url_to_ref[url]
+        return f'[^{ref_num}]'
     
-    async def process_text(self, text: str, context: Dict[str, Any]) -> str:
-        """处理文本，添加引用标记
+    def process_text(self, text: str) -> str:
+        """处理文本，添加引用标记"""
+        logger.info(f"Processing text: {text[:100]}...")
+        logger.info(f"Current data_to_urls size: {len(self.data_to_urls)}")
         
-        Args:
-            text: 要处理的文本
-            context: 包含数据源的上下文信息
-            
-        Returns:
-            str: 处理后的文本，包含引用标记
-        """
-        if not text or not context:
-            return text
-            
-        # 存储找到的数据及其位置
+        # 存储所有匹配结果
         matches = []
         
-        # 使用预定义的正则表达式模式匹配数据
+        # 首先使用正则表达式匹配数值数据
         for category, patterns in self.PATTERNS.items():
             for pattern in patterns:
                 for match in re.finditer(pattern, text, re.IGNORECASE):
-                    data = match.group(0)  # 提取匹配的数据
-                    if data in self.data_to_urls:
-                        matches.append((match.start(), match.end(), data))
+                    matched_text = match.group(0)
+                    # 检查这个数值是否在数据源中
+                    for data, urls in self.data_to_urls.items():
+                        if matched_text in data:
+                            # 获取匹配文本的位置
+                            pos = match.start()
+                            end_pos = match.end()
+                            
+                            # 检查这个位置是否已经有引用标记
+                            has_ref = False
+                            for m in matches:
+                                if abs(m[0] - pos) < 5 or abs(m[1] - end_pos) < 5:
+                                    has_ref = True
+                                    break
+                            
+                            if not has_ref:
+                                # 为每个匹配位置创建引用标记
+                                ref_nums = set()
+                                for url, title, score in urls:
+                                    if url not in self.url_to_ref:
+                                        self.url_to_ref[url] = len(self.url_to_ref) + 1
+                                        self.ref_to_url[self.url_to_ref[url]] = url
+                                        self.ref_to_title[self.url_to_ref[url]] = title
+                                    ref_nums.add(self.url_to_ref[url])
+                                
+                                if ref_nums:
+                                    # 创建单个引用标记，包含所有引用编号
+                                    ref_nums_str = ','.join(map(str, sorted(ref_nums)))
+                                    mark = f'[^{ref_nums_str}]'  # 移除多余的空格
+                                    matches.append((pos, end_pos, mark))
+                                    logger.debug(f"Found match: '{matched_text}' -> {mark} at position {pos}")
         
         # 按位置排序匹配结果
         matches.sort(key=lambda x: x[0])
         
-        # 从后向前插入引用标记（避免位置偏移）
-        result = text
-        for start, end, data in reversed(matches):
-            urls_with_info = self.data_to_urls[data]
-            # 根据分数排序URL
-            sorted_urls = self._sort_urls_by_score(urls_with_info)
-            # 为每个URL创建引用标记
-            ref_marks = []
-            for url, title in sorted_urls:
-                ref_mark = self._create_reference_mark(url, title)
-                ref_marks.append(ref_mark)
-            # 将所有引用标记组合在一起，使用更紧凑的格式
-            ref_mark = ''.join(ref_marks)
-            # 在数据后面添加引用标记，使用上标格式
-            result = result[:end] + '<sup>' + ref_mark + '</sup>' + result[end:]
+        # 合并相邻的引用标记
+        merged_matches = []
+        if matches:
+            current_match = list(matches[0])
+            for match in matches[1:]:
+                if match[0] <= current_match[1] + 5:  # 允许引用标记之间有5个字符的间隔
+                    # 合并引用标记，确保不重复
+                    current_refs = set(map(int, re.findall(r'\[\^(\d+(?:,\d+)*)\]', current_match[2])[0].split(',')))
+                    new_refs = set(map(int, re.findall(r'\[\^(\d+(?:,\d+)*)\]', match[2])[0].split(',')))
+                    combined_refs = sorted(list(current_refs.union(new_refs)))
+                    ref_nums_str = ','.join(map(str, combined_refs))
+                    current_match[2] = f'[^{ref_nums_str}]'  # 移除多余的空格
+                    current_match[1] = max(current_match[1], match[1])
+                else:
+                    merged_matches.append(tuple(current_match))
+                    current_match = list(match)
+            merged_matches.append(tuple(current_match))
         
+        # 从后向前替换，避免位置偏移
+        result = text
+        for start, end, mark in reversed(merged_matches):
+            # 在匹配文本后添加引用标记，确保标记前后有适当的空格
+            if end < len(result) and result[end].isalnum():
+                # 如果后面是字母或数字，添加空格
+                result = result[:end] + " " + mark + " " + result[end:]
+            else:
+                # 如果后面是标点符号或其他字符，不添加空格
+                result = result[:end] + mark + result[end:]
+        
+        # 清理可能存在的 HTML sup 标签
+        result = re.sub(r'<sup>\[.*?\]</sup>', '', result)
+        
+        # 优化引用标记的格式
+        # 1. 移除引用标记前后的多余空格
+        result = re.sub(r'\s+\[\^(\d+(?:,\d+)*)\]\s+', r' [^\1] ', result)
+        # 2. 确保引用标记和数字之间有空格
+        result = re.sub(r'\[\^(\d+(?:,\d+)*)\](\d)', r'[^\1] \2', result)
+        # 3. 确保引用标记和标点符号之间有空格
+        result = re.sub(r'\[\^(\d+(?:,\d+)*)\]([.,;:])', r'[^\1] \2', result)
+        # 4. 移除引用标记之间的多余空格
+        result = re.sub(r'\[\^(\d+(?:,\d+)*)\]\s+\[\^(\d+(?:,\d+)*)\]', r'[^\1][^\2]', result)
+        # 5. 确保引用标记和括号之间有空格
+        result = re.sub(r'\[\^(\d+(?:,\d+)*)\]\(', r'[^\1] (', result)
+        result = re.sub(r'\)\[\^(\d+(?:,\d+)*)\]', r') [^\1]', result)
+        
+        # 添加参考文献部分
+        references = self.get_references_section()
+        if references:
+            result += references
+        
+        logger.info(f"Found {len(matches)} matches in total")
         return result
     
     def get_references_section(self) -> str:
-        """生成引用部分，使用更规范的格式
+        """生成引用部分，使用纯Markdown格式
         
         Returns:
             str: 格式化的引用部分文本
         """
-        if not self.url_to_number:
+        if not self.url_to_ref:
             return ""
         
-        ref_text = "\n\n## 参考文献\n\n"
-        # 使用 number_to_url 字典，按数字顺序排序
-        for num in sorted(self.number_to_url.keys()):
-            url = self.number_to_url[num]
-            title = self.url_to_title.get(url, "")
+        ref_text = "\n\n## References\n\n"  # 使用英文标题
+        # 使用 ref_to_url 字典，按数字顺序排序
+        for num in sorted(self.ref_to_url.keys()):
+            url = self.ref_to_url[num]
+            title = self.ref_to_title.get(url, "")
             domain = urlparse(url).netloc
             
-            # 使用更规范的引用格式
+            # 使用纯Markdown格式
             if title:
-                ref_text += f"{num}. {title}. {domain}. {url}\n"
+                # 如果标题太长，截断并添加省略号
+                display_title = title if len(title) <= 100 else title[:97] + "..."
+                ref_text += f'[^{num}]: [{display_title}]({url}) - {domain}\n'
             else:
-                ref_text += f"{num}. {domain}. {url}\n"
+                ref_text += f'[^{num}]: [{domain}]({url})\n'
         
         return ref_text
     
@@ -162,6 +231,9 @@ class TextReferenceLinker:
         self.data_to_urls.clear()
         self.url_to_title.clear()
         self.current_ref_number = 0
+        self.url_to_ref.clear()
+        self.ref_to_url.clear()
+        self.ref_to_title.clear()
     
     def load_local_content(self, company: str = None) -> None:
         """从本地JSON文件加载内容

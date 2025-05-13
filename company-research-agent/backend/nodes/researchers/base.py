@@ -398,8 +398,11 @@ class BaseResearcher:
         if not text:
             return text
             
+        logger.info(f"Processing text with references: '{text[:100]}...'")
+        
         # 重置文本链接器状态
         self.text_linker.reset()
+        logger.info("Reset text linker state")
         
         # 从状态中获取数据源
         data_sources = {
@@ -409,7 +412,12 @@ class BaseResearcher:
             'industry_data': state.get('industry_data', {})
         }
         
+        # 记录每个类别的数据源数量
+        for category, sources in data_sources.items():
+            logger.info(f"Found {len(sources)} sources in {category}")
+        
         # 添加所有数据源到文本链接器
+        total_sources = 0
         for category, sources in data_sources.items():
             for url, doc in sources.items():
                 if content := doc.get('content'):
@@ -418,6 +426,10 @@ class BaseResearcher:
                     score = doc.get('score', 0.0)
                     # 添加数据源，包含标题信息
                     self.text_linker.add_data_source(content, url, title, score)
+                    total_sources += 1
+                    logger.debug(f"Added source from {category}: url='{url}', title='{title}', score={score}")
+        
+        logger.info(f"Added {total_sources} total sources to text linker")
         
         try:
             # 处理文本，添加引用标记
@@ -428,7 +440,8 @@ class BaseResearcher:
             if references:
                 # 使用HTML格式包装引用部分，控制字体大小
                 processed_text += f'\n<div style="font-size: 0.9em;">{references}</div>'
-                
+                logger.info("Added references section to processed text")
+            
             return processed_text
         except Exception as e:
             logger.error(f"Error processing text with references: {e}")

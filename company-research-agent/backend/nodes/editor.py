@@ -4,6 +4,7 @@ from openai import AsyncOpenAI
 import os
 import logging
 import re
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -66,8 +67,9 @@ Please follow these guidelines:
 4. Remove any redundant information
 5. Keep the tone professional and objective
 6. Include all relevant metrics and statistics
-7. Preserve any source citations or references
+7. Preserve any source citations or references in the format <sup>[n]</sup> where n is the reference number
 8. Format the report in markdown
+9. Do not modify or remove any existing reference marks in the format <sup>[n]</sup>
 
 The report should follow this structure:
 # {company} Research Report
@@ -91,6 +93,8 @@ Please compile the report now, ensuring all information is accurate and well-org
     async def compile_briefings(self, state: ResearchState) -> ResearchState:
         """Compile individual briefing categories from state into a final report."""
         company = state.get('company', 'Unknown Company')
+        logger.info(f"Starting report compilation for company: {company}")
+        logger.info(f"Current state keys: {list(state.keys())}")
         
         # Update context with values from state
         self.context = {
@@ -98,6 +102,7 @@ Please compile the report now, ensuring all information is accurate and well-org
             "industry": state.get('industry', 'Unknown'),
             "hq_location": state.get('hq_location', 'Unknown')
         }
+        logger.info(f"Updated context: {self.context}")
         
         # Send initial compilation status
         if websocket_manager := state.get('websocket_manager'):
@@ -144,24 +149,38 @@ Please compile the report now, ensuring all information is accurate and well-org
         individual_briefings = {}
         for category, key in briefing_keys.items():
             if content := state.get(key):
-                individual_briefings[category] = content
-                msg.append(f"Found {category} briefing ({len(content)} characters)")
+                # 检查简报内容是否有效
+                if isinstance(content, str) and content.strip():
+                    individual_briefings[category] = content
+                    msg.append(f"Found {category} briefing ({len(content)} characters)")
+                    logger.info(f"Valid {category} briefing found: {content[:100]}...")
+                else:
+                    msg.append(f"Invalid {category} briefing content")
+                    logger.error(f"Invalid content for state key: {key}, content type: {type(content)}, content length: {len(str(content)) if content else 0}")
             else:
                 msg.append(f"No {category} briefing available")
-                logger.error(f"Missing state key: {key}")
+                logger.error(f"Missing state key: {key}, available keys: {list(state.keys())}")
         
         if not individual_briefings:
-            msg.append("\n⚠️ No briefing sections available to compile")
-            logger.error("No briefings found in state")
+            msg.append("\n⚠️ No valid briefing sections available to compile")
+            logger.error("No valid briefings found in state")
+            state['status'] = "editor_failed"
+            state['error'] = "No valid briefings available for compilation"
+            return state
         else:
             try:
                 compiled_report = await self.edit_report(state, individual_briefings, context)
                 if not compiled_report or not compiled_report.strip():
                     logger.error("Compiled report is empty!")
+                    state['status'] = "editor_failed"
+                    state['error'] = "Failed to compile report from briefings"
                 else:
                     logger.info(f"Successfully compiled report with {len(compiled_report)} characters")
+                    state['status'] = "editor_complete"
             except Exception as e:
                 logger.error(f"Error during report compilation: {e}")
+                state['status'] = "editor_failed"
+                state['error'] = str(e)
         state.setdefault('messages', []).append(AIMessage(content="\n".join(msg)))
         return state
     
@@ -215,11 +234,14 @@ Please compile the report now, ensuring all information is accurate and well-org
                     )
             final_report = await self.content_sweep(state, edited_report, company)
             
-            final_report = final_report or ""
+            # 如果 content_sweep 返回空字符串，使用初始编译的报告
+            if not final_report or not final_report.strip():
+                logger.warning("Content sweep returned empty report, using initial compilation")
+                final_report = edited_report
             
             logger.info(f"Final report compiled with {len(final_report)} characters")
             if not final_report.strip():
-                logger.error("Final report is empty!")
+                logger.error("Both initial compilation and content sweep failed to generate report")
                 return ""
             
             logger.info("Final report preview:")
@@ -254,12 +276,15 @@ Please compile the report now, ensuring all information is accurate and well-org
             return ""
     
     async def compile_content(self, state: ResearchState, briefings: Dict[str, str], company: str) -> str:
-        """Initial compilation of research sections."""
+        """编译研究内容，添加引用链接"""
         try:
             # 重置文本链接器状态
             self.text_linker.reset()
             
-            # 从状态中获取数据源
+            # 收集所有数据源
+            logger.info(f"Data source counts: { {k: len(v) for k, v in briefings.items()} }")
+            
+            # 从状态中获取数据源信息
             data_sources = {
                 'company_data': state.get('company_data', {}),
                 'financial_data': state.get('financial_data', {}),
@@ -271,32 +296,58 @@ Please compile the report now, ensuring all information is accurate and well-org
             for category, sources in data_sources.items():
                 for url, doc in sources.items():
                     if content := doc.get('content'):
-                        # 获取标题和分数
                         title = doc.get('title', '')
                         score = doc.get('score', 0.0)
-                        # 添加数据源，包含标题信息
                         self.text_linker.add_data_source(content, url, title, score)
+                        logger.info(f"Added source from {category}: url='{url}', title='{title}', score={score}")
+            
+            # 添加简报内容作为额外数据源
+            for category, content in briefings.items():
+                if isinstance(content, str) and content.strip():
+                    # 为简报内容生成一个唯一的URL
+                    url = f"briefing://{category}"
+                    self.text_linker.add_data_source(content, url, f"{category} Briefing", 0.5)
+                    logger.debug(f"Added briefing source: {category}")
             
             # 构建提示词
-            prompt = self._build_compilation_prompt(briefings, company)
-            
-            # 获取初始报告
+            prompt = f"""Please generate a detailed research report based on the following research briefings. Requirements:
+
+1. Use Markdown format for the entire report
+2. For any data that needs citation, ONLY use Markdown footnote format with [^n] where n is the footnote number
+3. DO NOT use HTML sup tags or any other citation formats
+4. Use simple bullet points (*) for lists
+5. Keep paragraphs concise and well-structured
+6. Maintain a professional and objective tone
+7. Ensure data accuracy and traceability
+8. Each footnote should be a clickable link to its source
+9. Include a References section at the end using the format:
+   [^n]: [Title](URL) - Domain
+10. IMPORTANT: 
+    - Use ONLY [^n] format for citations
+    - Never use <sup> tags or other citation formats
+    - Keep formatting simple and consistent
+    - Use only basic Markdown elements (headings, bullet points, links)
+    - Each citation should appear only once in the text
+
+Research briefings:
+{json.dumps(briefings, ensure_ascii=False, indent=2)}
+
+Please generate a clean, well-organized research report with proper citations using ONLY Markdown footnotes."""
+
+            # 发送编译请求到 LLM
+            logger.info("Sending compilation request to LLM...")
             response = await self.openai_client.chat.completions.create(
                 model="openai/gpt-4.1",
                 messages=[
-                    {
-                        "role": "system",
-                        "content": "You are an expert report editor that compiles research briefings into comprehensive company reports."
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
+                    {"role": "system", "content": "You are a professional research report writer. You must use ONLY Markdown footnote format [^n] for citations. Never use HTML sup tags or other citation formats. Each citation should appear only once in the text."},
+                    {"role": "user", "content": prompt}
                 ],
-                temperature=0,
-                stream=False
+                temperature=0.7,
+                max_tokens=4000
             )
             initial_report = response.choices[0].message.content.strip()
+            logger.info(f"Received initial report from LLM, length: {len(initial_report)}")
+            logger.debug(f"Initial report preview: {initial_report[:200]}")
             
             # 处理每个段落，添加引用链接
             paragraphs = initial_report.split('\n\n')
@@ -310,23 +361,17 @@ Please compile the report now, ensuring all information is accurate and well-org
                     processed_paragraphs.append(paragraph)
                     continue
                 
-                # 首先使用 find_matching_content 找到匹配的内容
-                matches = self.text_linker.find_matching_content(paragraph)
-                if matches:
-                    logger.info(f"Found {len(matches)} matches for paragraph {i+1}")
-                    # 记录匹配结果，但不直接修改文本
-                    for match in matches:
-                        logger.debug(f"Match found: {match['url']} (score: {match['score']})")
+                # 移除任何 HTML sup 标签和重复的引用
+                paragraph = re.sub(r'<sup>\[.*?\]</sup>', '', paragraph)  # 移除 HTML sup 标签
+                paragraph = re.sub(r'\[\^(\d+)\].*?\[\^\1\]', r'[^\1]', paragraph)  # 移除重复的引用
+                paragraph = re.sub(r'\[\^(\d+)\].*?<sup>\[\1.*?\]</sup>', r'[^\1]', paragraph)  # 移除引用和 sup 标签的组合
                 
                 # 使用 TextReferenceLinker 处理段落内容
-                context = {
-                    "company": company,
-                    "industry": state.get('industry', 'Unknown'),
-                    "analyst_type": "editor"
-                }
-                processed_para = await self.text_linker.process_text(paragraph, context)
+                processed_para = self.text_linker.process_text(paragraph)
                 if processed_para != paragraph:
                     logger.info(f"Added references to paragraph {i+1}")
+                    logger.debug(f"Original: {paragraph[:100]}...")
+                    logger.debug(f"Processed: {processed_para[:100]}...")
                 processed_paragraphs.append(processed_para)
             
             # 重新组合处理后的段落
@@ -335,7 +380,10 @@ Please compile the report now, ensuring all information is accurate and well-org
             # 添加引用部分
             references = self.text_linker.get_references_section()
             if references:
-                final_report += f'\n<div style="font-size: 0.9em;">{references}</div>'
+                # 移除引用部分中的 HTML 标签
+                references = re.sub(r'<.*?>', '', references)
+                final_report += f'\n\n## 参考文献\n\n{references}'
+                logger.info("Added references section to final report")
             
             return final_report
             
@@ -345,12 +393,17 @@ Please compile the report now, ensuring all information is accurate and well-org
         
     async def content_sweep(self, state: ResearchState, content: str, company: str) -> str:
         """Sweep the content for any redundant information."""
-        # Use values from centralized context
-        company = self.context["company"]
-        industry = self.context["industry"]
-        hq_location = self.context["hq_location"]
-        
-        prompt = f"""You are an expert briefing editor. You are given a report on {company}.
+        try:
+            logger.info(f"Starting content sweep for {company}")
+            logger.info(f"Input content length: {len(content)}")
+            logger.debug(f"Input content preview: {content[:200]}")
+            
+            # Use values from centralized context
+            company = self.context["company"]
+            industry = self.context["industry"]
+            hq_location = self.context["hq_location"]
+            
+            prompt = f"""You are an expert briefing editor. You are given a report on {company}.
 
 Current report:
 {content}
@@ -359,7 +412,8 @@ Current report:
 2. Remove information that is not relevant to {company}, the {industry} company headquartered in {hq_location}.
 3. Remove sections lacking substantial content
 4. Remove any meta-commentary (e.g. "Here is the news...")
-5. DO NOT modify any reference links in the format [🔗](url) - they are clickable citations
+5. DO NOT modify or remove any reference marks in the format <sup>[n]</sup> - they are important citations
+6. DO NOT modify or remove any data points that have reference marks
 
 Strictly enforce this EXACT document structure:
 
@@ -391,18 +445,18 @@ Critical rules:
 7. Never use more than one blank line between sections
 8. Format all bullet points with *
 9. Add one blank line before and after each section/list
-10. DO NOT modify any reference links in the format [🔗](url) - they are clickable citations
-11. DO NOT remove or modify any data points that have source links
+10. DO NOT modify or remove any reference marks in the format <sup>[n]</sup>
+11. DO NOT remove or modify any data points that have reference marks
+12. Keep all reference marks exactly as they appear in the text
 
 Return the polished report in flawless markdown format. No explanation."""
         
-        try:
             response = await self.openai_client.chat.completions.create(
-                model="openai/gpt-4.1-mini", 
+                model="openai/gpt-4.1",  # 使用与 compile_content 相同的模型
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are an expert markdown formatter that ensures consistent document structure. Never modify reference links in the format [🔗](url)."
+                        "content": "You are an expert markdown formatter that ensures consistent document structure. Never modify reference marks in the format <sup>[n]</sup>."
                     },
                     {
                         "role": "user",
@@ -410,63 +464,24 @@ Return the polished report in flawless markdown format. No explanation."""
                     }
                 ],
                 temperature=0,
-                stream=True
+                stream=False  # 不使用流式输出，确保完整性
             )
             
-            accumulated_text = ""
-            buffer = ""
-            
-            async for chunk in response:
-                if chunk.choices[0].finish_reason == "stop":
-                    websocket_manager = state.get('websocket_manager')
-                    if websocket_manager and buffer:
-                        job_id = state.get('job_id')
-                        if job_id:
-                            await websocket_manager.send_status_update(
-                                job_id=job_id,
-                                status="report_chunk",
-                                message="Formatting final report",
-                                result={
-                                    "chunk": buffer,
-                                    "step": "Editor"
-                                }
-                            )
-                    break
-                    
-                chunk_text = chunk.choices[0].delta.content
-                if chunk_text:
-                    accumulated_text += chunk_text
-                    buffer += chunk_text
-                    
-                    if any(char in buffer for char in ['.', '!', '?', '\n']) and len(buffer) > 10:
-                        if websocket_manager := state.get('websocket_manager'):
-                            if job_id := state.get('job_id'):
-                                await websocket_manager.send_status_update(
-                                    job_id=job_id,
-                                    status="report_chunk",
-                                    message="Formatting final report",
-                                    result={
-                                        "chunk": buffer,
-                                        "step": "Editor"
-                                    }
-                                )
-                        buffer = ""
-            
-            # 确保引用链接格式正确
-            final_text = accumulated_text.strip()
+            final_text = response.choices[0].message.content.strip()
+            logger.info(f"Content sweep completed, final text length: {len(final_text)}")
+            logger.debug(f"Final text preview: {final_text[:200]}")
             
             # 再次使用 TextReferenceLinker 处理文本，确保所有数据点都有来源链接
-            context = {
-                "company": company,
-                "industry": industry,
-                "analyst_type": "editor"
-            }
-            final_text = await self.text_linker.process_text(final_text, context)
+            processed_text = self.text_linker.process_text(final_text)
+            if processed_text != final_text:
+                logger.info("Added additional references during content sweep")
+                logger.debug(f"Original: {final_text[:100]}...")
+                logger.debug(f"Processed: {processed_text[:100]}...")
             
-            return final_text
+            return processed_text
         except Exception as e:
-            logger.error(f"Error in formatting: {e}")
-            return (content or "").strip()
+            logger.error(f"Error in content sweep: {e}")
+            return content  # 如果出错，返回原始内容
 
     async def run(self, state: ResearchState) -> ResearchState:
         state = await self.compile_briefings(state)
