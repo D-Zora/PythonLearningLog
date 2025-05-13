@@ -14,13 +14,31 @@ class LocalDataManager:
         self.data_dir.mkdir(exist_ok=True)
         logger.info(f"Local data directory initialized at {self.data_dir}")
     
+    def _normalize_name(self, name: str) -> str:
+        """标准化名称，用于目录和文件名
+        
+        Args:
+            name: 要标准化的名称
+            
+        Returns:
+            str: 标准化后的名称
+        """
+        # 移除多余的空格
+        name = name.strip()
+        # 将空格替换为下划线
+        name = name.replace(" ", "_")
+        # 移除其他特殊字符
+        name = "".join(c if c.isalnum() or c == "_" else "_" for c in name)
+        # 确保名称不为空
+        return name or "unknown"
+    
     async def get_site_extraction(self, url: str) -> Dict[str, Any]:
         """从本地数据中获取网站内容提取结果"""
         try:
             # 使用URL的域名作为文件名
             from urllib.parse import urlparse
             domain = urlparse(url).netloc
-            safe_domain = "".join(c if c.isalnum() else "_" for c in domain)
+            safe_domain = self._normalize_name(domain)
             file_path = self.data_dir / f"{safe_domain}_site.json"
             
             if not file_path.exists():
@@ -40,12 +58,13 @@ class LocalDataManager:
     async def get_search_results(self, query: str, company: str = None) -> Dict[str, Any]:
         """从本地数据中获取搜索结果"""
         try:
-            # 使用查询作为文件名
-            safe_query = "".join(c if c.isalnum() else "_" for c in query)
+            # 标准化查询和公司名称
+            safe_query = self._normalize_name(query)
             
             # 如果提供了公司名称，在公司子目录中查找
             if company:
-                file_path = self.data_dir / company / f"{safe_query}.json"
+                safe_company = self._normalize_name(company)
+                file_path = self.data_dir / safe_company / f"{safe_query}.json"
             else:
                 file_path = self.data_dir / f"{safe_query}.json"
             
@@ -77,12 +96,15 @@ class LocalDataManager:
     def save_search_results(self, company: str, query: str, results: Dict[str, Any]) -> None:
         """保存搜索结果到本地JSON文件"""
         try:
+            # 标准化公司名称和查询
+            safe_company = self._normalize_name(company)
+            safe_query = self._normalize_name(query)
+            
             # 创建公司目录
-            company_dir = self.data_dir / company
+            company_dir = self.data_dir / safe_company
             company_dir.mkdir(exist_ok=True)
             
-            # 使用查询作为文件名（进行简单清理）
-            safe_query = "".join(c if c.isalnum() else "_" for c in query)
+            # 构建文件路径
             file_path = company_dir / f"{safe_query}.json"
             
             # 保存数据
@@ -97,9 +119,12 @@ class LocalDataManager:
     def load_search_results(self, company: str, query: str) -> Optional[Dict[str, Any]]:
         """从本地JSON文件加载搜索结果"""
         try:
+            # 标准化公司名称和查询
+            safe_company = self._normalize_name(company)
+            safe_query = self._normalize_name(query)
+            
             # 构建文件路径
-            safe_query = "".join(c if c.isalnum() else "_" for c in query)
-            file_path = self.data_dir / company / f"{safe_query}.json"
+            file_path = self.data_dir / safe_company / f"{safe_query}.json"
             
             if not file_path.exists():
                 logger.info(f"No local data found for query '{query}'")
@@ -117,6 +142,7 @@ class LocalDataManager:
     
     def has_local_data(self, company: str, query: str) -> bool:
         """检查是否存在本地数据"""
-        safe_query = "".join(c if c.isalnum() else "_" for c in query)
-        file_path = self.data_dir / company / f"{safe_query}.json"
+        safe_company = self._normalize_name(company)
+        safe_query = self._normalize_name(query)
+        file_path = self.data_dir / safe_company / f"{safe_query}.json"
         return file_path.exists() 

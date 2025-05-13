@@ -1,8 +1,11 @@
 import re
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List, Tuple, Optional
 import logging
 from urllib.parse import urlparse
 from .references import clean_title
+import json
+from pathlib import Path
+from backend.utils.local_data import LocalDataManager
 
 logger = logging.getLogger(__name__)
 
@@ -37,31 +40,24 @@ class TextReferenceLinker:
         'technical_metrics': [
             r'(?:efficiency|performance|capacity|range|speed|power|output)\s*(?:of|at|is|was)?\s*\d+(?:\.\d+)?(?:\s*(?:kWh|kW|mph|km/h|miles|kilometers|percent|%))?',
             r'\d+(?:\.\d+)?(?:\s*(?:kWh|kW|mph|km/h|miles|kilometers|percent|%))?\s*(?:efficiency|performance|capacity|range|speed|power|output)',
-        ],
-        # 新增：日期数据
-        'dates': [
-            r'(?:Q[1-4]|quarter)\s*\d{4}',
-            r'(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{4}',
-            r'\d{4}',
-        ],
-        # 新增：公司事件
-        'company_events': [
-            r'(?:announced|launched|introduced|released|acquired|partnered with|invested in)\s+(?:[A-Z][a-zA-Z\s]+)',
-            r'(?:expansion|growth|development|innovation|breakthrough)\s+(?:in|of|for)\s+(?:[A-Z][a-zA-Z\s]+)',
         ]
     }
     
-    def __init__(self):
-        self.url_to_number = {}
+    def __init__(self, data_dir: Optional[Path] = None):
+        self.url_to_number = {}  # URL -> number
+        self.number_to_url = {}  # number -> URL
         self.current_ref_number = 0
         self.data_to_urls = {}
-        self.url_to_title = {}  # 新增：存储URL到标题的映射
+        self.url_to_title = {}  # 存储URL到标题的映射
+        self.data_dir = data_dir  # 本地数据目录
+        self.content_cache = {}  # 缓存已加载的内容
     
     def _get_or_create_ref_number(self, url: str) -> int:
         """获取或创建URL的引用编号"""
         if url not in self.url_to_number:
             self.current_ref_number += 1
             self.url_to_number[url] = self.current_ref_number
+            self.number_to_url[self.current_ref_number] = url
         return self.url_to_number[url]
     
     def add_data_source(self, data: str, url: str, title: str = "", score: float = 0.0) -> None:
@@ -106,11 +102,11 @@ class TextReferenceLinker:
         # 存储找到的数据及其位置
         matches = []
         
-        # 使用所有模式匹配数据
+        # 使用预定义的正则表达式模式匹配数据
         for category, patterns in self.PATTERNS.items():
             for pattern in patterns:
                 for match in re.finditer(pattern, text, re.IGNORECASE):
-                    data = match.group(0)
+                    data = match.group(0)  # 提取匹配的数据
                     if data in self.data_to_urls:
                         matches.append((match.start(), match.end(), data))
         
@@ -145,8 +141,9 @@ class TextReferenceLinker:
             return ""
         
         ref_text = "\n\n## 参考文献\n\n"
-        for num in sorted(self.url_to_number.keys()):
-            url = self.url_to_number[num]
+        # 使用 number_to_url 字典，按数字顺序排序
+        for num in sorted(self.number_to_url.keys()):
+            url = self.number_to_url[num]
             title = self.url_to_title.get(url, "")
             domain = urlparse(url).netloc
             
@@ -161,6 +158,170 @@ class TextReferenceLinker:
     def reset(self) -> None:
         """重置链接器状态"""
         self.url_to_number.clear()
+        self.number_to_url.clear()
         self.data_to_urls.clear()
         self.url_to_title.clear()
-        self.current_ref_number = 0 
+        self.current_ref_number = 0
+    
+    def load_local_content(self, company: str = None) -> None:
+        """从本地JSON文件加载内容
+        
+        Args:
+            company: 公司名称，如果提供则只加载该公司目录下的文件
+        """
+        if not self.data_dir:
+            logger.warning("No data directory specified for loading local content")
+            return
+            
+        try:
+            # 使用 LocalDataManager 获取数据
+            local_data_manager = LocalDataManager(data_dir=self.data_dir)
+            
+            # 获取公司目录下的所有 JSON 文件
+            company_dir = self.data_dir / company if company else self.data_dir
+            if not company_dir.exists():
+                logger.warning(f"Company directory not found: {company_dir}")
+                return
+                
+            # 遍历所有 JSON 文件
+            for json_file in company_dir.glob("**/*.json"):
+                try:
+                    # 读取 JSON 文件
+                    with open(json_file, 'r', encoding='utf-8') as f:
+                        data = json.load(f)
+                    
+                    # 处理数据并添加到引用系统
+                    for url, doc in data.items():
+                        content = doc.get("content", "")
+                        title = doc.get("title", "")
+                        score = doc.get("score", 0.0)
+                        
+                        if content:
+                            segments = self._split_content_into_segments(content)
+                            for segment in segments:
+                                self.add_data_source(segment, url, title, score)
+                            
+                            self.content_cache[url] = {
+                                "content": content,
+                                "title": title,
+                                "score": score
+                            }
+                    
+                    logger.info(f"Successfully loaded content from {json_file}")
+                except Exception as e:
+                    logger.error(f"Error loading file {json_file}: {e}")
+                    continue
+                    
+        except Exception as e:
+            logger.error(f"Error loading local content: {e}")
+    
+    def _split_content_into_segments(self, content: str, min_length: int = 50) -> List[str]:
+        """将内容分割成有意义的段落
+        
+        Args:
+            content: 要分割的内容
+            min_length: 最小段落长度
+            
+        Returns:
+            List[str]: 段落列表
+        """
+        # 使用多种分隔符分割内容
+        segments = []
+        # 按句子分割
+        sentences = re.split(r'(?<=[.!?])\s+', content)
+        current_segment = []
+        current_length = 0
+        
+        for sentence in sentences:
+            sentence = sentence.strip()
+            if not sentence:
+                continue
+                
+            # 如果当前段落加上新句子超过最小长度，保存当前段落
+            if current_length + len(sentence) > min_length and current_segment:
+                segments.append(' '.join(current_segment))
+                current_segment = []
+                current_length = 0
+            
+            current_segment.append(sentence)
+            current_length += len(sentence)
+        
+        # 添加最后一个段落
+        if current_segment:
+            segments.append(' '.join(current_segment))
+        
+        return segments
+    
+    def find_matching_content(self, text: str, threshold: float = 0.7) -> List[Dict[str, Any]]:
+        """查找与给定文本匹配的内容
+        Args:
+            text: 要匹配的文本
+            threshold: 匹配阈值（0-1之间）
+            
+        Returns:
+            List[Dict[str, Any]]: 匹配结果列表，每个结果包含url、title、score和匹配内容
+        """
+        matches = []
+        
+        # 首先使用正则表达式模式匹配
+        for category, patterns in self.PATTERNS.items():
+            for pattern in patterns:
+                for match in re.finditer(pattern, text, re.IGNORECASE):
+                    data = match.group(0)
+                    if data in self.data_to_urls:
+                        urls_with_info = self.data_to_urls[data]
+                        for url, title, score in urls_with_info:
+                            matches.append({
+                                "url": url,
+                                "title": title,
+                                "score": score,
+                                "matched_content": data,
+                                "match_type": "pattern"
+                            })
+        
+        # 然后进行模糊匹配
+        for url, cache_data in self.content_cache.items():
+            content = cache_data["content"]
+            title = cache_data["title"]
+            score = cache_data["score"]
+            
+            # 计算文本相似度（这里使用简单的包含关系，可以替换为更复杂的相似度算法）
+            if text.lower() in content.lower():
+                similarity = len(text) / len(content)  # 简单的相似度计算
+                if similarity >= threshold:
+                    matches.append({
+                        "url": url,
+                        "title": title,
+                        "score": score * similarity,  # 调整分数
+                        "matched_content": content,
+                        "match_type": "fuzzy"
+                    })
+        
+        # 按分数排序
+        matches.sort(key=lambda x: x["score"], reverse=True)
+        return matches
+    
+    def add_tavily_results(self, results: List[Dict[str, Any]]) -> None:
+        """添加Tavily API搜索结果
+        
+        Args:
+            results: Tavily API返回的结果列表
+        """
+        for result in results:
+            url = result.get("url")
+            content = result.get("content", "")
+            title = result.get("title", "")
+            score = result.get("score", 0.0)
+            
+            if content and url:
+                # 将内容分段并添加到数据源
+                segments = self._split_content_into_segments(content)
+                for segment in segments:
+                    self.add_data_source(segment, url, title, score)
+                
+                # 缓存完整内容
+                self.content_cache[url] = {
+                    "content": content,
+                    "title": title,
+                    "score": score
+                } 

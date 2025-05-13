@@ -164,6 +164,18 @@ const ResearchReport: React.FC<ResearchReportProps> = ({
               li: ({node, ...props}) => (
                 <li className="text-gray-800" {...props} />
               ),
+              sup: ({node, children, ...props}) => {
+                const refMatch = String(children).match(/^\[(\d+)\]$/);
+                if (refMatch) {
+                  const refNum = refMatch[1];
+                  return (
+                    <sup className="text-[#468BFF] hover:text-[#8FBCFA] no-underline font-medium mx-1 px-1 py-0.5 rounded bg-blue-50 hover:bg-blue-100 cursor-pointer transition-colors inline-block">
+                      [{refNum}]
+                    </sup>
+                  );
+                }
+                return <sup {...props}>{children}</sup>;
+              },
               a: ({node, href, children, ...props}) => {
                 const isRefLink = /^\[\d+\]$/.test(String(children));
                 const isEmojiLink = /^\[🔗/.test(String(children));

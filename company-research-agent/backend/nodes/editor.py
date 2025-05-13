@@ -30,9 +30,63 @@ class Editor:
             "hq_location": "Unknown"
         }
         
-        # 初始化文本引用链接器
+        # 初始化数据管理器和文本引用链接器
         self.local_data_manager = LocalDataManager()
-        self.text_linker = TextReferenceLinker()
+        self.text_linker = TextReferenceLinker(data_dir=self.local_data_manager.data_dir)
+
+    def _build_compilation_prompt(self, briefings: Dict[str, str], company: str) -> str:
+        """构建用于编译报告的提示词。"""
+        # 获取各个部分的简报内容
+        company_briefing = briefings.get('company', 'No company briefing available')
+        industry_briefing = briefings.get('industry', 'No industry briefing available')
+        financial_briefing = briefings.get('financial', 'No financial briefing available')
+        news_briefing = briefings.get('news', 'No news briefing available')
+
+        # 构建提示词
+        prompt = f"""You are an expert report editor tasked with compiling a comprehensive research report for {company}.
+
+Please compile the following research briefings into a cohesive report:
+
+COMPANY BRIEFING:
+{company_briefing}
+
+INDUSTRY BRIEFING:
+{industry_briefing}
+
+FINANCIAL BRIEFING:
+{financial_briefing}
+
+NEWS BRIEFING:
+{news_briefing}
+
+Please follow these guidelines:
+1. Create a well-structured report with clear sections and subsections
+2. Maintain all factual information and data points
+3. Ensure smooth transitions between sections
+4. Remove any redundant information
+5. Keep the tone professional and objective
+6. Include all relevant metrics and statistics
+7. Preserve any source citations or references
+8. Format the report in markdown
+
+The report should follow this structure:
+# {company} Research Report
+
+## Company Overview
+[Company information, history, business model, etc.]
+
+## Industry Overview
+[Industry analysis, market trends, competitive landscape]
+
+## Financial Overview
+[Financial performance, key metrics, analysis]
+
+## News
+[Recent developments, significant events]
+
+Please compile the report now, ensuring all information is accurate and well-organized."""
+
+        return prompt
 
     async def compile_briefings(self, state: ResearchState) -> ResearchState:
         """Compile individual briefing categories from state into a final report."""
@@ -201,44 +255,32 @@ class Editor:
     
     async def compile_content(self, state: ResearchState, briefings: Dict[str, str], company: str) -> str:
         """Initial compilation of research sections."""
-        combined_content = "\n\n".join(content for content in briefings.values())
-        
-        # 使用集中的上下文值
-        company = self.context["company"]
-        industry = self.context["industry"]
-        hq_location = self.context["hq_location"]
-        
-        prompt = f"""You are compiling a comprehensive research report about {company}.
-
-Compiled briefings:
-{combined_content}
-
-Create a comprehensive and focused report on {company}, a {industry} company headquartered in {hq_location} that:
-1. Integrates information from all sections into a cohesive non-repetitive narrative
-2. Maintains important details from each section
-3. Logically organizes information and removes transitional commentary / explanations
-4. Uses clear section headers and structure
-
-Formatting rules:
-Strictly enforce this EXACT document structure:
-
-# {company} Research Report
-
-## Company Overview
-[Company content with ### subsections]
-
-## Industry Overview
-[Industry content with ### subsections]
-
-## Financial Overview
-[Financial content with ### subsections]
-
-## News
-[News content with ### subsections]
-
-Return the report in clean markdown format. No explanations or commentary."""
-        
         try:
+            # 重置文本链接器状态
+            self.text_linker.reset()
+            
+            # 从状态中获取数据源
+            data_sources = {
+                'company_data': state.get('company_data', {}),
+                'financial_data': state.get('financial_data', {}),
+                'news_data': state.get('news_data', {}),
+                'industry_data': state.get('industry_data', {})
+            }
+            
+            # 添加所有数据源到文本链接器
+            for category, sources in data_sources.items():
+                for url, doc in sources.items():
+                    if content := doc.get('content'):
+                        # 获取标题和分数
+                        title = doc.get('title', '')
+                        score = doc.get('score', 0.0)
+                        # 添加数据源，包含标题信息
+                        self.text_linker.add_data_source(content, url, title, score)
+            
+            # 构建提示词
+            prompt = self._build_compilation_prompt(briefings, company)
+            
+            # 获取初始报告
             response = await self.openai_client.chat.completions.create(
                 model="openai/gpt-4.1",
                 messages=[
@@ -268,10 +310,18 @@ Return the report in clean markdown format. No explanations or commentary."""
                     processed_paragraphs.append(paragraph)
                     continue
                 
+                # 首先使用 find_matching_content 找到匹配的内容
+                matches = self.text_linker.find_matching_content(paragraph)
+                if matches:
+                    logger.info(f"Found {len(matches)} matches for paragraph {i+1}")
+                    # 记录匹配结果，但不直接修改文本
+                    for match in matches:
+                        logger.debug(f"Match found: {match['url']} (score: {match['score']})")
+                
                 # 使用 TextReferenceLinker 处理段落内容
                 context = {
                     "company": company,
-                    "industry": industry,
+                    "industry": state.get('industry', 'Unknown'),
                     "analyst_type": "editor"
                 }
                 processed_para = await self.text_linker.process_text(paragraph, context)
@@ -282,10 +332,16 @@ Return the report in clean markdown format. No explanations or commentary."""
             # 重新组合处理后的段落
             final_report = '\n\n'.join(processed_paragraphs)
             
+            # 添加引用部分
+            references = self.text_linker.get_references_section()
+            if references:
+                final_report += f'\n<div style="font-size: 0.9em;">{references}</div>'
+            
             return final_report
+            
         except Exception as e:
-            logger.error(f"Error in initial compilation: {e}")
-            return (combined_content or "").strip()
+            logger.error(f"Error in compilation: {e}")
+            return ""
         
     async def content_sweep(self, state: ResearchState, content: str, company: str) -> str:
         """Sweep the content for any redundant information."""

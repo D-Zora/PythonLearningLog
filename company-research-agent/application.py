@@ -26,8 +26,26 @@ from backend.services.pdf_service import PDFService # PDF服务，用于生成PD
 # 配置日志记录器
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+
+# 创建日志目录
+log_dir = Path("logs")
+log_dir.mkdir(exist_ok=True)
+
+# 配置控制台处理器
 console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+console_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+console_handler.setFormatter(console_formatter)
+
+# 配置文件处理器
+file_handler = logging.FileHandler(log_dir / "app.log")
+file_handler.setLevel(logging.INFO)
+file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(file_formatter)
+
+# 添加处理器到日志记录器
 logger.addHandler(console_handler)
+logger.addHandler(file_handler)
 
 # 创建FastAPI应用实例
 app = FastAPI(title="Tavily Company Research API")

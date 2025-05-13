@@ -22,7 +22,8 @@ class BaseResearcher:
         
         # 初始化数据管理器和文本链接器
         self.local_data_manager = LocalDataManager()
-        self.text_linker = TextReferenceLinker()
+        # 初始化文本链接器，传入本地数据目录
+        self.text_linker = TextReferenceLinker(data_dir=self.local_data_manager.data_dir)
         
         # Tavily API 配置（生产环境使用）
         # tavily_key = os.getenv("TAVILY_API_KEY")
@@ -40,7 +41,7 @@ class BaseResearcher:
         if not openai_key:
             raise ValueError("OPENAI_API_KEY environment variable is not set")
         self.openai_client = AsyncOpenAI(api_key=openai_key, base_url="https://openrouter.ai/api/v1")
-        self.analyst_type = "base_researcher"
+        self._analyst_type = None
 
     @property
     def analyst_type(self) -> str:
@@ -190,88 +191,67 @@ class BaseResearcher:
     async def search_single_query(self, query: str, websocket_manager=None, job_id=None) -> Dict[str, Any]:
         """Execute a single search query with proper error handling."""
         try:
-            if websocket_manager and job_id:
-                await websocket_manager.send_status_update(
-                    job_id=job_id,
-                    status="query_searching",
-                    message=f"Searching: {query}",
-                    result={
-                        "step": "Searching",
-                        "query": query
-                    }
-                )
-
             if self.use_local_data:
-                # 本地数据模式
-                results = await self.local_data_manager.get_search_results(query)
+                # 使用本地数据模式
+                results = self.local_data_manager.get_search_results(query)
+                if results:
+                    # 将搜索结果添加到文本链接器
+                    for result in results:
+                        self.text_linker.add_data_source(
+                            result.get('content', ''),
+                            result.get('url', ''),
+                            result.get('title', ''),
+                            result.get('score', 0.0)
+                        )
+                    return results
             else:
-                # Tavily API 模式
-                # search_params = {
-                #     "search_depth": "basic",
-                #     "include_raw_content": False,
-                #     "max_results": 5
-                # }
-                # if self.analyst_type == "news_analyst":
-                #     search_params["topic"] = "news"
-                # elif self.analyst_type == "financial_analyst":
-                #     search_params["topic"] = "finance"
-                # results = await self.tavily_client.search(query, **search_params)
-                pass
-            
-            docs = {}
-            for result in results.get("results", []):
-                if not result.get("content") or not result.get("url"):
-                    continue
-                    
-                url = result.get("url")
-                title = result.get("title", "")
-                
-                # Clean up and validate the title using the references module
-                if title:
-                    title = clean_title(title)
-                    # If title is the same as URL or empty, set to empty to trigger extraction later
-                    if title.lower() == url.lower() or not title.strip():
-                        title = ""
-                
-                logger.info(f"{'Local' if self.use_local_data else 'Tavily'} search result for '{query}': URL={url}, Title='{title}'")
-                
-                docs[url] = {
-                    "title": title,
-                    "content": result.get("content", ""),
-                    "query": query,
-                    "url": url,
-                    "source": "local_data" if self.use_local_data else "web_search",
-                    "score": result.get("score", 0.0)
-                }
-
-            if websocket_manager and job_id:
-                await websocket_manager.send_status_update(
-                    job_id=job_id,
-                    status="query_searched",
-                    message=f"Found {len(docs)} results for: {query}",
-                    result={
-                        "step": "Searching",
-                        "query": query,
-                        "results_count": len(docs)
-                    }
+                # 使用 Tavily API 模式
+                search_result = await self.tavily_client.search(
+                    query=query,
+                    search_depth="advanced",
+                    include_answer=True,
+                    include_raw_content=True
                 )
-
-            return docs
-            
+                
+                if search_result and 'results' in search_result:
+                    # 将 Tavily 搜索结果添加到文本链接器
+                    self.text_linker.add_tavily_results(search_result['results'])
+                    return search_result['results']
+                    
         except Exception as e:
-            logger.error(f"Error searching query '{query}': {e}")
+            logger.error(f"Error during search execution: {e}")
             if websocket_manager and job_id:
                 await websocket_manager.send_status_update(
                     job_id=job_id,
                     status="query_error",
-                    message=f"Search failed for: {query}",
+                    message=f"Search failed: {str(e)}",
                     result={
                         "step": "Searching",
-                        "query": query,
                         "error": str(e)
                     }
                 )
             return {}
+        return {}
+
+    def _normalize_query(self, query: str) -> str:
+        """标准化查询名称，确保与文件名格式一致
+        
+        Args:
+            query: 原始查询字符串
+            
+        Returns:
+            str: 标准化后的查询名称
+        """
+        # 移除多余的空格
+        query = query.strip()
+        # 将空格替换为下划线
+        query = query.replace(" ", "_")
+        # 转换为小写
+        query = query.lower()
+        # 移除其他特殊字符
+        query = "".join(c if c.isalnum() or c == "_" else "_" for c in query)
+        # 确保名称不为空
+        return query or "unknown"
 
     async def search_documents(self, state: ResearchState, queries: List[str]) -> Dict[str, Any]:
         websocket_manager = state.get('websocket_manager')
@@ -299,7 +279,9 @@ class BaseResearcher:
         if self.use_local_data:
             # 本地数据模式
             for query in queries:
-                results = await self.local_data_manager.get_search_results(query, company=company)
+                # 标准化查询名称
+                normalized_query = self._normalize_query(query)
+                results = await self.local_data_manager.get_search_results(normalized_query, company=company)
                 if results and results.get("results"):
                     for result in results["results"]:
                         url = result.get("url")
@@ -307,7 +289,7 @@ class BaseResearcher:
                             merged_docs[url] = {
                                 "title": result.get("title", ""),
                                 "content": result.get("content", ""),
-                                "query": query,
+                                "query": query,  # 保持原始查询名称
                                 "url": url,
                                 "source": "local_data",  # 强制设置为 local_data
                                 "score": result.get("score", 0.0)
@@ -337,55 +319,70 @@ class BaseResearcher:
                 self.tavily_client.search(query, **search_params)
                 for query in queries
             ]
+            
             try:
-                results = await asyncio.gather(*search_tasks)
-                for query, result in zip(queries, results):
-                    docs = {}
-                    for item in result.get("results", []):
-                        if not item.get("content") or not item.get("url"):
-                            continue
-                        url = item.get("url")
-                        title = item.get("title", "")
-                        if title:
-                            title = clean_title(title)
-                            if title.lower() == url.lower() or not title.strip():
-                                title = ""
-                        doc = {
-                            "title": title,
-                            "content": item.get("content", ""),
-                            "query": query,
-                            "url": url,
-                            "source": "web_search",
-                            "score": item.get("score", 0.0)
-                        }
-                        docs[url] = doc
-                        merged_docs[url] = doc
-                    # API模式下自动保存本地数据
-                    self.local_data_manager.save_search_results(company, query, docs)
-                    if websocket_manager and job_id:
-                        await websocket_manager.send_status_update(
-                            job_id=job_id,
-                            status="query_searched",
-                            message=f"Found {len(docs)} results for: {query}",
-                            result={
-                                "step": "Searching",
+                search_results = await asyncio.gather(*search_tasks, return_exceptions=True)
+                
+                for query, result in zip(queries, search_results):
+                    if isinstance(result, Exception):
+                        logger.error(f"Error during parallel search execution: {result}")
+                        continue
+                        
+                    if not result or not result.get("results"):
+                        logger.warning(f"No results found for query: {query}")
+                        continue
+                        
+                    for doc in result["results"]:
+                        url = doc.get("url")
+                        if url:
+                            merged_docs[url] = {
+                                "title": doc.get("title", ""),
+                                "content": doc.get("content", ""),
                                 "query": query,
-                                "results_count": len(docs)
+                                "url": url,
+                                "source": "tavily_api",
+                                "score": doc.get("score", 0.0)
                             }
-                        )
+                            
+                # 保存搜索结果到本地
+                if merged_docs:
+                    normalized_company = self._normalize_query(company)
+                    for query in queries:
+                        normalized_query = self._normalize_query(query)
+                        query_docs = {
+                            url: doc for url, doc in merged_docs.items()
+                            if doc["query"] == query
+                        }
+                        if query_docs:
+                            await self.local_data_manager.save_search_results(
+                                normalized_company,
+                                normalized_query,
+                                query_docs
+                            )
             except Exception as e:
                 logger.error(f"Error during parallel search execution: {e}")
                 if websocket_manager and job_id:
                     await websocket_manager.send_status_update(
                         job_id=job_id,
-                        status="query_error",
+                        status="error",
                         message=f"Search failed: {str(e)}",
-                        result={
-                            "step": "Searching",
-                            "error": str(e)
-                        }
+                        error=f"Search error: {str(e)}"
                     )
                 return {}
+            
+        if websocket_manager and job_id:
+            await websocket_manager.send_status_update(
+                job_id=job_id,
+                status="processing",
+                message=f"Found {len(merged_docs)} documents using {'local data' if self.use_local_data else 'Tavily API'}",
+                result={
+                    "step": "Searching",
+                    "analyst_type": self.analyst_type,
+                    "queries": queries,
+                    "mode": "local_data" if self.use_local_data else "tavily_api"
+                }
+            )
+            
         return merged_docs
 
     async def process_text_with_references(self, text: str, state: ResearchState) -> str:
