@@ -2,7 +2,8 @@ from langchain_core.messages import AIMessage
 import os
 import logging
 from ..classes import InputState, ResearchState
-from ..utils.local_data import LocalDataManager
+from tavily import AsyncTavilyClient
+from openai import AsyncOpenAI
 
 logger = logging.getLogger(__name__)
 
@@ -10,32 +11,33 @@ class GroundingNode:
     """Gathers initial grounding data about the company."""
     
     def __init__(self) -> None:
-        # 本地数据模式配置
-        self.local_data_manager = LocalDataManager()
+        # Tavily API 配置
+        tavily_key = os.getenv("TAVILY_API_KEY")
+        if not tavily_key:
+            raise ValueError("TAVILY_API_KEY environment variable is not set")
+        self.tavily_client = AsyncTavilyClient(api_key=tavily_key)
         
-        # Tavily API 配置（生产环境使用）
-        # self.tavily_client = AsyncTavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
+        # OpenAI API 配置
+        openai_key = os.getenv("OPENAI_API_KEY")
+        if not openai_key:
+            raise ValueError("OPENAI_API_KEY environment variable is not set")
+        self.openai_client = AsyncOpenAI(api_key=openai_key, base_url="https://openrouter.ai/api/v1")
 
     async def initial_search(self, state: InputState) -> ResearchState:
         # Add debug logging at the start to check websocket manager
-        if websocket_manager := state.get('websocket_manager'):
-            logger.info("Websocket manager found in state")
-        else:
-            logger.warning("No websocket manager found in state")
-        
-        company = state.get('company', 'Unknown Company')
-        msg = f"🎯 Initiating research for {company}...\n"
-        
         if websocket_manager := state.get('websocket_manager'):
             if job_id := state.get('job_id'):
                 await websocket_manager.send_status_update(
                     job_id=job_id,
                     status="processing",
-                    message=f"🎯 Initiating research for {company}",
-                    result={"step": "Initializing"}
+                    message="Starting initial company research",
+                    result={"step": "Initial Research"}
                 )
 
+        company = state.get('company', 'Unknown Company')
+        msg = f"🎯 Initiating research for {company}...\n\n"
         site_scrape = {}
+        error_str = None
 
         # Only attempt extraction if we have a URL
         if url := state.get('company_url'):
@@ -53,13 +55,9 @@ class GroundingNode:
                     )
 
             try:
-                # 本地数据模式
-                logger.info("Initiating local data extraction")
-                site_extraction = await self.local_data_manager.get_site_extraction(url)
-                
-                # Tavily API 模式
-                # logger.info("Initiating Tavily extraction")
-                # site_extraction = await self.tavily_client.extract(url, extract_depth="basic")
+                # 使用 Tavily API 进行网站分析
+                logger.info("Initiating Tavily extraction")
+                site_extraction = await self.tavily_client.extract(url, extract_depth="advanced")
                 
                 raw_contents = []
                 for item in site_extraction.get("results", []):
@@ -67,68 +65,16 @@ class GroundingNode:
                         raw_contents.append(content)
                 
                 if raw_contents:
-                    site_scrape = {
-                        'title': company,
-                        'raw_content': "\n\n".join(raw_contents)
-                    }
-                    logger.info(f"Successfully extracted {len(raw_contents)} content sections")
-                    msg += f"\n✅ Successfully extracted content from website"
-                    if websocket_manager := state.get('websocket_manager'):
-                        if job_id := state.get('job_id'):
-                            await websocket_manager.send_status_update(
-                                job_id=job_id,
-                                status="processing",
-                                message="Successfully extracted content from website",
-                                result={"step": "Initial Site Scrape"}
-                            )
+                    site_scrape = "\n".join(raw_contents)
+                    msg += "\n✓ Successfully extracted website content"
                 else:
-                    logger.warning("No content found in extraction results")
-                    msg += f"\n⚠️ No content found in website extraction"
-                    if websocket_manager := state.get('websocket_manager'):
-                        if job_id := state.get('job_id'):
-                            await websocket_manager.send_status_update(
-                                job_id=job_id,
-                                status="processing",
-                                message="⚠️ No content found in provided URL",
-                                result={"step": "Initial Site Scrape"}
-                            )
+                    msg += "\n⚠️ No content found in website extraction"
+                    
             except Exception as e:
                 error_str = str(e)
-                logger.error(f"Website extraction error: {error_str}", exc_info=True)
-                error_msg = f"⚠️ Error extracting website content: {error_str}"
-                print(error_msg)
-                msg += f"\n{error_msg}"
-                if websocket_manager := state.get('websocket_manager'):
-                    if job_id := state.get('job_id'):
-                        await websocket_manager.send_status_update(
-                            job_id=job_id,
-                            status="website_error",
-                            message=error_msg,
-                            result={
-                                "step": "Initial Site Scrape", 
-                                "error": error_str,
-                                "continue_research": True  # Continue with research even if website extraction fails
-                            }
-                        )
-        else:
-            msg += "\n⏩ No company URL provided, proceeding directly to research phase"
-            if websocket_manager := state.get('websocket_manager'):
-                if job_id := state.get('job_id'):
-                    await websocket_manager.send_status_update(
-                        job_id=job_id,
-                        status="processing",
-                        message="No company URL provided, proceeding directly to research phase",
-                        result={"step": "Initializing"}
-                    )
-        # Add context about what information we have
-        context_data = {}
-        if hq := state.get('hq_location'):
-            msg += f"\n📍 Company HQ: {hq}"
-            context_data["hq_location"] = hq
-        if industry := state.get('industry'):
-            msg += f"\n🏭 Industry: {industry}"
-            context_data["industry"] = industry
-        
+                msg += f"\n⚠️ Error extracting website content: {error_str}"
+                logger.error(f"Error during website extraction: {e}")
+
         # Initialize ResearchState with input information
         research_state = {
             # Copy input fields

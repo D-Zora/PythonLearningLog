@@ -91,7 +91,7 @@ class ResearchRequest(BaseModel):
     company_url: str | None = None
     industry: str | None = None
     hq_location: str | None = None
-    use_local_data: bool = True  # 默认使用本地数据模式
+    use_local_data: bool = False  # 默认使用本地数据模式
 
 # 定义PDF生成请求模型，定义了但好像未调用
 class PDFGenerationRequest(BaseModel):

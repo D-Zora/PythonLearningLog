@@ -13,28 +13,21 @@ import asyncio
 logger = logging.getLogger(__name__)
 
 class BaseResearcher:
-    def __init__(self, use_local_data: bool = True):  # 默认使用本地数据模式
+    def __init__(self, use_local_data: bool = False):  # 修改默认值为 False
         # 切换模式：True 使用本地数据，False 使用 Tavily API
-        # self.use_local_data = True  # 测试时使用本地数据模式
-        # self.use_local_data = False  # 生产环境使用 Tavily API 模式
-        # 使用传入的 use_local_data 参数
         self.use_local_data = use_local_data
         
-        # 初始化数据管理器和文本链接器
-        self.local_data_manager = LocalDataManager()
-        # 初始化文本链接器，传入本地数据目录
-        self.text_linker = TextReferenceLinker(data_dir=self.local_data_manager.data_dir)
-        
-        # Tavily API 配置（生产环境使用）
-        # tavily_key = os.getenv("TAVILY_API_KEY")
-        # if not tavily_key:
-        #     raise ValueError("TAVILY_API_KEY environment variable is not set")
-        # self.tavily_client = AsyncTavilyClient(api_key=tavily_key)
-        if not self.use_local_data:
+        # 初始化数据管理器和文本链接器（仅用于本地数据模式）
+        if self.use_local_data:
+            self.local_data_manager = LocalDataManager()
+            self.text_linker = TextReferenceLinker(data_dir=self.local_data_manager.data_dir)
+        else:
+            # Tavily API 配置（生产环境使用）
             tavily_key = os.getenv("TAVILY_API_KEY")
             if not tavily_key:
                 raise ValueError("TAVILY_API_KEY environment variable is not set")
             self.tavily_client = AsyncTavilyClient(api_key=tavily_key)
+            self.text_linker = TextReferenceLinker()  # 不传入本地数据目录
             
         # OpenAI API 配置
         openai_key = os.getenv("OPENAI_API_KEY")
@@ -276,35 +269,17 @@ class BaseResearcher:
             )
 
         merged_docs = {}
-        if self.use_local_data:
-            # 本地数据模式
-            for query in queries:
-                # 标准化查询名称
-                normalized_query = self._normalize_query(query)
-                results = await self.local_data_manager.get_search_results(normalized_query, company=company)
-                if results and results.get("results"):
-                    for result in results["results"]:
-                        url = result.get("url")
-                        if url:
-                            merged_docs[url] = {
-                                "title": result.get("title", ""),
-                                "content": result.get("content", ""),
-                                "query": query,  # 保持原始查询名称
-                                "url": url,
-                                "source": "local_data",  # 强制设置为 local_data
-                                "score": result.get("score", 0.0)
-                            }
-        else:
-            # API模式，自动保存本地数据
+        if not self.use_local_data:  # 使用 Tavily API 模式
             search_params = {
-                "search_depth": "basic",
-                "include_raw_content": False,
-                "max_results": 5
+                "search_depth": "advanced",  # 使用高级搜索深度
+                "include_raw_content": True,
+                "max_results": 10  # 增加结果数量
             }
             if self.analyst_type == "news_analyst":
                 search_params["topic"] = "news"
             elif self.analyst_type == "financial_analyst":
                 search_params["topic"] = "finance"
+                
             if websocket_manager and job_id:
                 await websocket_manager.send_status_update(
                     job_id=job_id,
@@ -315,6 +290,7 @@ class BaseResearcher:
                         "total_queries": len(queries)
                     }
                 )
+                
             search_tasks = [
                 self.tavily_client.search(query, **search_params)
                 for query in queries
@@ -344,21 +320,6 @@ class BaseResearcher:
                                 "score": doc.get("score", 0.0)
                             }
                             
-                # 保存搜索结果到本地
-                if merged_docs:
-                    normalized_company = self._normalize_query(company)
-                    for query in queries:
-                        normalized_query = self._normalize_query(query)
-                        query_docs = {
-                            url: doc for url, doc in merged_docs.items()
-                            if doc["query"] == query
-                        }
-                        if query_docs:
-                            await self.local_data_manager.save_search_results(
-                                normalized_company,
-                                normalized_query,
-                                query_docs
-                            )
             except Exception as e:
                 logger.error(f"Error during parallel search execution: {e}")
                 if websocket_manager and job_id:

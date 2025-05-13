@@ -5,13 +5,13 @@ from ...classes import ResearchState
 from .base import BaseResearcher
 
 class CompanyAnalyzer(BaseResearcher):
-    def __init__(self, use_local_data: bool = True) -> None:
+    def __init__(self, use_local_data: bool = False) -> None:
         # 模式切换说明：
         # - use_local_data=True: 使用本地数据模式（用于测试）
         # - use_local_data=False: 使用 Tavily API 模式（用于生产环境）
         # 注意：本地数据模式下，需要在 local_data/{company_name}/ 目录下有对应的 JSON 文件
         super().__init__(use_local_data=use_local_data)
-        self.analyst_type = "company_analyzer"
+        self.analyst_type = "company_analyst"
 
     async def analyze(self, state: ResearchState) -> Dict[str, Any]:
         company = state.get('company', 'Unknown Company')

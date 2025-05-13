@@ -7,7 +7,7 @@ from .base import BaseResearcher
 logger = logging.getLogger(__name__)
 
 class FinancialAnalyst(BaseResearcher):
-    def __init__(self, use_local_data: bool = True) -> None:
+    def __init__(self, use_local_data: bool = False) -> None:
         # 模式切换说明：
         # - use_local_data=True: 使用本地数据模式（用于测试）
         # - use_local_data=False: 使用 Tavily API 模式（用于生产环境）

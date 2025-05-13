@@ -67,9 +67,16 @@ class TextReferenceLinker:
             self.number_to_url[self.current_ref_number] = url
         return self.url_to_number[url]
     
+    def _is_valid_url(self, url: str) -> bool:
+        if not url or not isinstance(url, str):
+            return False
+            
+        url = url.strip().lower()
+        return url.startswith(('http://', 'https://', 'www.'))
+    
     def add_data_source(self, data: str, url: str, title: str = "", score: float = 0.0) -> None:
         """添加数据源映射，包含标题和相关性分数"""
-        if data and url:
+        if data and url and self._is_valid_url(url):
             if data not in self.data_to_urls:
                 self.data_to_urls[data] = []
             # 存储URL、标题和分数
@@ -177,6 +184,10 @@ class TextReferenceLinker:
         # 清理可能存在的 HTML sup 标签
         result = re.sub(r'<sup>\[.*?\]</sup>', '', result)
         
+        # 清理错误的引用格式
+        result = re.sub(r'\[\^(\d+)\[.*?\]\]', r'[^\1]', result)  # 清理 [^1[^1]] 格式
+        result = re.sub(r'\[\^(\d+)\].*?\[\^\1\]', r'[^\1]', result)  # 清理重复引用
+        
         # 优化引用标记的格式
         # 1. 移除引用标记前后的多余空格
         result = re.sub(r'\s+\[\^(\d+(?:,\d+)*)\]\s+', r' [^\1] ', result)
@@ -189,6 +200,9 @@ class TextReferenceLinker:
         # 5. 确保引用标记和括号之间有空格
         result = re.sub(r'\[\^(\d+(?:,\d+)*)\]\(', r'[^\1] (', result)
         result = re.sub(r'\)\[\^(\d+(?:,\d+)*)\]', r') [^\1]', result)
+        
+        # 移除可能存在的重复 References 部分
+        result = re.sub(r'\n\n## References\n\n.*?(?=\n\n## |$)', '', result, flags=re.DOTALL)
         
         # 添加参考文献部分
         references = self.get_references_section()
@@ -207,9 +221,18 @@ class TextReferenceLinker:
         if not self.url_to_ref:
             return ""
         
-        ref_text = "\n\n## References\n\n"  # 使用英文标题
-        # 使用 ref_to_url 字典，按数字顺序排序
+        # 清理重复的引用标记
+        ref_text = "\n\n## References\n\n"
+        
+        # 使用集合来跟踪已处理的引用编号
+        processed_refs = set()
+        
+        # 按数字顺序排序引用
         for num in sorted(self.ref_to_url.keys()):
+            # 跳过已经处理过的引用编号
+            if num in processed_refs:
+                continue
+                
             url = self.ref_to_url[num]
             title = self.ref_to_title.get(url, "")
             domain = urlparse(url).netloc
@@ -221,6 +244,14 @@ class TextReferenceLinker:
                 ref_text += f'[^{num}]: [{display_title}]({url}) - {domain}\n'
             else:
                 ref_text += f'[^{num}]: [{domain}]({url})\n'
+            
+            # 标记此引用编号已处理
+            processed_refs.add(num)
+        
+        # 清理可能存在的重复引用标记
+        ref_text = re.sub(r'\[\^(\d+)\].*?\[\^\1\]', r'[^\1]', ref_text)
+        # 清理错误的引用格式（如 [^1[^1]]）
+        ref_text = re.sub(r'\[\^(\d+)\[.*?\]\]', r'[^\1]', ref_text)
         
         return ref_text
     

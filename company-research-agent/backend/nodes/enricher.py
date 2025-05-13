@@ -2,21 +2,21 @@ from langchain_core.messages import AIMessage
 from typing import Dict, List
 import os
 import asyncio
+import logging
 from ..classes import ResearchState
-from ..utils.local_data import LocalDataManager
+from tavily import AsyncTavilyClient
+
+logger = logging.getLogger(__name__)
 
 class Enricher:
     """Enriches curated documents with raw content."""
     
     def __init__(self) -> None:
-        # 本地数据模式配置
-        self.local_data_manager = LocalDataManager()
-        
-        # Tavily API 配置（生产环境使用）
-        # tavily_key = os.getenv("TAVILY_API_KEY")
-        # if not tavily_key:
-        #     raise ValueError("TAVILY_API_KEY environment variable is not set")
-        # self.tavily_client = AsyncTavilyClient(api_key=tavily_key)
+        # Tavily API 配置
+        tavily_key = os.getenv("TAVILY_API_KEY")
+        if not tavily_key:
+            raise ValueError("TAVILY_API_KEY environment variable is not set")
+        self.tavily_client = AsyncTavilyClient(api_key=tavily_key)
         
         self.batch_size = 20
 
@@ -35,11 +35,8 @@ class Enricher:
                     }
                 )
 
-            # 本地数据模式
-            result = await self.local_data_manager.get_site_extraction(url)
-            
-            # Tavily API 模式
-            # result = await self.tavily_client.extract(url)
+            # 使用 Tavily API 提取内容
+            result = await self.tavily_client.extract(url, extract_depth="advanced")
             
             if result and result.get('results'):
                 if websocket_manager and job_id:
@@ -55,24 +52,36 @@ class Enricher:
                         }
                     )
                 return {url: result['results'][0].get('raw_content', '')}
-        except Exception as e:
-            print(f"Error fetching raw content for {url}: {e}")
-            error_msg = str(e)
+            
             if websocket_manager and job_id:
                 await websocket_manager.send_status_update(
                     job_id=job_id,
-                    status="extraction_error",
-                    message=f"Failed to extract content from {url}: {error_msg}",
+                    status="extraction_failed",
+                    message=f"Failed to extract content from {url}",
                     result={
                         "step": "Enriching",
                         "url": url,
                         "category": category,
-                        "success": False,
-                        "error": error_msg
+                        "success": False
                     }
                 )
-            return {url: '', "error": error_msg}
-        return {url: ''}
+            return {url: ""}
+            
+        except Exception as e:
+            logger.error(f"Error extracting content from {url}: {e}")
+            if websocket_manager and job_id:
+                await websocket_manager.send_status_update(
+                    job_id=job_id,
+                    status="extraction_error",
+                    message=f"Error extracting content from {url}: {str(e)}",
+                    result={
+                        "step": "Enriching",
+                        "url": url,
+                        "category": category,
+                        "error": str(e)
+                    }
+                )
+            return {url: ""}
 
     async def fetch_raw_content(self, urls: List[str], websocket_manager=None, job_id=None, category=None) -> Dict[str, str]:
         """Fetch raw content for multiple URLs in parallel."""
