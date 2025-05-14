@@ -9,7 +9,6 @@ class CompanyAnalyzer(BaseResearcher):
         # 模式切换说明：
         # - use_local_data=True: 使用本地数据模式（用于测试）
         # - use_local_data=False: 使用 Tavily API 模式（用于生产环境）
-        # 注意：本地数据模式下，需要在 local_data/{company_name}/ 目录下有对应的 JSON 文件
         super().__init__(use_local_data=use_local_data)
         self.analyst_type = "company_analyst"
 

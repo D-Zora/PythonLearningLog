@@ -73,28 +73,23 @@ Please follow these guidelines:
 
 # Report Format
 
-description: |
-    This node formats the research report with proper citations and references.
-    
-    Report Format Rules:
-    1. Content should be concise and well-structured
-    2. All factual statements and data must be cited
-    3. Citations should use Markdown footnote format [^n]
-    4. URLs in references must start with http://, https://, or www.
-    5. Each reference should include the source title and domain
-    
-    Example:
-    Tesla's Q4 2023 revenue reached $25.17 billion[^1], with a year-over-year growth of 3%[^2]. 
-    The company delivered 484,507 vehicles in the quarter[^3], maintaining its position as the 
-    leading electric vehicle manufacturer.
+description:
+Format Rules:
+1. Concise content with clear structure
+2. Cite all facts and data
+3. Use [^n] for citations
+4. Valid URLs only (http://, https://, www.)
+5. Include source title and domain
 
-    References:
-    [^1]: [Tesla Q4 2023 Financial Results](https://ir.tesla.com/press-release/tesla-announces-fourth-quarter-2023-financial-results) - ir.tesla.com
-    [^2]: [Tesla Quarterly Report Q4 2023](https://www.sec.gov/Archives/edgar/data/1318605/000095017024000409/tsla-10k_20231231.htm) - sec.gov
-    [^3]: [Tesla Vehicle Production & Deliveries](https://www.tesla.com/blog/tesla-q4-2023-vehicle-production-deliveries) - tesla.com
+Example:
+Tesla Q4 2023: $25.17B revenue[^1], +3% YoY[^2], 484,507 deliveries[^3].
 
-    Note: All URLs must be valid web addresses starting with http://, https://, or www.
-    Invalid URLs will be filtered out during processing.
+References:
+[^1]: [Tesla Q4 2023 Results](https://ir.tesla.com/press-release/tesla-announces-fourth-quarter-2023-financial-results) - ir.tesla.com
+[^2]: [Tesla Q4 2023 Report](https://www.sec.gov/Archives/edgar/data/1318605/000095017024000409/tsla-10k_20231231.htm) - sec.gov
+[^3]: [Tesla Q4 2023 Deliveries](https://www.tesla.com/blog/tesla-q4-2023-vehicle-production-deliveries) - tesla.com
+
+Note: Invalid URLs will be filtered.
 
 The report should follow this structure:
 # {company} Research Report
