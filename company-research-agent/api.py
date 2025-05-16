@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, AsyncGenerator
 from pathlib import Path
@@ -22,6 +23,14 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="公司研究报告API")
 
+# 添加CORS中间件
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 class CompanyResearchRequest(BaseModel):
     company: str
     company_url: Optional[str] = None
